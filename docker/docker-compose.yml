@@ -1,0 +1,33 @@
+# @Author: Ramiro Luiz Nunes
+# @Date:   2024-05-30 18:23:03
+# @Last Modified by:   Ramiro Luiz Nunes
+# @Last Modified time: 2024-05-30 18:29:21
+
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      - ENV=development
+
+  db:
+    image: postgres:13
+    restart: always
+    environment:
+      POSTGRES_USER: example
+      POSTGRES_PASSWORD: example
+      POSTGRES_DB: example_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

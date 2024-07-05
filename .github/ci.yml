@@ -1,0 +1,32 @@
+# @Author: Ramiro Luiz Nunes
+# @Date:   2024-05-30 18:03:42
+# @Last Modified by:   Ramiro Luiz Nunes
+# @Last Modified time: 2024-05-30 18:05:03
+
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Environment
+      run: |
+        # Example for Python
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        # Example for Node.js
+        npm install
+
+    - name: Run tests
+      run: |
+        # Example for Python
+        pytest
+        # Example for Node.js
+        npm test
