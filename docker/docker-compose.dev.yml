@@ -1,0 +1,23 @@
+# ============================================================================
+# @Author: Ramiro Luiz Nunes
+# @Date:   2024-07-05 13:42:08
+# @Info:   Docker compose to manage development containers
+# ============================================================================
+
+version: '3.8'
+
+services:
+  traffic-analysis:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.dev
+    container_name: traffic-analysis
+    environment:
+      - DISPLAY=${DISPLAY}
+    tty: true
+    volumes:
+      - ../src:/home/app/project/src
+      - ../deploy/requirements.txt:/home/app/project/requirements.txt
+      - ../..:/home/app/project
+      - /tmp/.X11-unix:/tmp/.X11-unix
+    working_dir: /home/app/project

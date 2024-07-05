@@ -1,0 +1,64 @@
+# Use a base image with Miniconda
+FROM continuumio/miniconda3:latest
+
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
+# Install OpenGL and Qt dependencies
+RUN apt-get update && apt-get install -y \
+    wget \
+    curl \
+    bzip2 \
+    sudo \
+    libgl1-mesa-glx \
+    libxrender1 \
+    libxext6 \
+    libxkbcommon-x11-0 \
+    libxcb-xinerama0 \
+    libxcb-xinput0 \
+    libxcb-icccm4 \
+    libxcb-image0 \
+    libxcb-keysyms1 \
+    libxcb-randr0 \
+    libxcb-render-util0 \
+    libxcb-shape0 \
+    libxcb-shm0 \
+    libxcb-sync1 \
+    libxcb-xfixes0 \
+    libxkbcommon-x11-0 \
+    libxcb1 \
+    libsm6 \
+    libice6 \
+    libx11-xcb1 \
+    xauth \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create a non-root user
+RUN useradd -ms /bin/bash app
+USER app
+WORKDIR /home/app
+
+# Initialize conda
+RUN conda init bash
+
+# Create and activate a conda environment with the latest Python version
+RUN conda create -y -n traffic_analysis python=3.11
+
+# Ensure the conda environment is activated
+RUN echo "source /opt/conda/etc/profile.d/conda.sh && conda activate traffic_analysis" >> ~/.bashrc
+
+# Install required packages in the conda environment
+RUN /bin/bash -c "source /opt/conda/etc/profile.d/conda.sh && conda activate traffic_analysis && conda install -y orange3"
+
+# Set working directory and copy the project files
+WORKDIR /home/app/project
+COPY --chown=app:app src/ ./src/
+COPY --chown=app:app deploy/requirements.txt .
+
+# Install Python dependencies in the conda environment
+RUN /bin/bash -c "source /opt/conda/etc/profile.d/conda.sh && conda activate traffic_analysis && pip install -r requirements.txt"
+
+# Set entrypoint
+CMD ["bash"]
