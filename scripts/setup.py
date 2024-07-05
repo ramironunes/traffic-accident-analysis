@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
+# ============================================================================
 # @Author: Ramiro Luiz Nunes
-# @Date:   2024-05-30 20:54:25
-# @Last Modified by:   Ramiro Luiz Nunes
-# @Last Modified time: 2024-05-30 20:57:49
+# @Date:   2024-07-05 13:42:08
+# @Info:   A brief description of the file
+# ============================================================================
 
 """ Information in `setup.py`
 

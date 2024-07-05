@@ -1,125 +1,64 @@
-# Project Template
+# Traffic Accident Analysis
 
-This repository is a template for creating new projects. It includes a basic structure and setup to get you started quickly.
+This repository aims to analyze traffic accident data using Python and various data science tools. The project includes a Docker setup to ensure a consistent development environment with all necessary dependencies.
 
-## Table of Contents
+## Technologies Used
 
-- [Project Template](#project-template)
-  - [Table of Contents](#table-of-contents)
-  - [Installation](#installation)
-  - [Usage](#usage)
-  - [Features](#features)
-  - [Contributing](#contributing)
-  - [License](#license)
-  - [Project Structure](#project-structure)
+- **Python**: The main programming language used for data analysis and processing.
+- **Conda**: Used to manage dependencies and create isolated environments.
+- **Orange3**: A comprehensive suite for machine learning and data mining.
+- **Docker**: Ensures a consistent and reproducible environment for development and deployment.
 
-## Installation
+## Getting Started
 
-1. **Clone the repository:**
-    ```bash
-    git clone https://github.com/yourusername/project-template.git
-    cd project-template
-    ```
+### Prerequisites
 
-2. **Install the dependencies:**
-    ```bash
-    # Example for Python
-    pip install -r deployment/requirements.txt
-    # Example for Node.js
-    npm install
-    ```
+Ensure you have Docker and Docker Compose installed on your system.
 
-## Usage
+### Installing Docker and Docker Compose
 
-1. **Run the application:**
-    ```bash
-    # Example for Python
-    python src/main_file.py
-    # Example for Node.js
-    node src/main_file
-    ```
+To install Docker and Docker Compose, follow these steps:
 
-2. **Run the application with Docker:**
-    ```bash
-    docker-compose -f docker/docker-compose.yml up --build
-    ```
+1. **Install Docker:**
+   ```bash
+   sudo apt-get update
+   sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+   ```
 
-## Features
+2. **Start the Docker Container:**
+   ```bash
+   docker compose -f docker/docker-compose.dev.yml up -d
+   ```
 
-- Modular structure
-- Docker support
-- Basic CI setup with GitHub Actions
+3. **Access the Container:**
+   To access the container in interactive mode, run:
+   ```bash
+   docker compose -f docker/docker-compose.dev.yml exec traffic-analysis bash
+   ```
 
-## Contributing
+4. **Initialize Conda and Activate the Environment:**
+   Inside the container, initialize Conda and activate the environment:
+   ```bash
+   source /opt/conda/etc/profile.d/conda.sh
+   conda activate traffic_analysis
+   ```
 
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+5. **Start Orange:**
+   Once the environment is activated, start Orange with:
+   ```bash
+   orange-canvas
+   ```
 
-## License
+### Project Dependencies
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Dependencies are managed via Conda and are specified in the deploy/requirements.txt file. Key dependencies include:
+- **Orange3**: A comprehensive suite for machine learning and data mining.
 
-## Project Structure
+### Project Scripts
 
-```plaintext
-project-template/
-│
-├── .github/
-│   ├── ISSUE_TEMPLATE/
-│   │   └── bug_report.md
-│   │   └── feature_request.md
-│   ├── PULL_REQUEST_TEMPLATE.md
-│   └── workflows/
-│       └── ci.yml
-│
-├── docs/
-│   ├── index.md
-│   ├── getting_started.md
-│   └── api_reference.md
-│
-├── src/
-│   ├── main_file.py  # Main entry point (e.g., main.py, index.js)
-│   ├── abstracts/
-│   │   └── base_abstract.py
-│   ├── configs/
-│   │   └── config.py
-│   ├── controllers/
-│   │   └── user_controller.py
-│   ├── models/
-│   │   └── user_model.py
-│   ├── modules/
-│   │   └── module_file.py
-│   ├── routes/
-│   │   └── user_routes.py
-│   ├── services/
-│   │   └── user_service.py
-│   ├── utils/
-│   │   └── date_utils.py
-│   ├── resources/
-│   │   ├── templates/
-│   │   │   └── base.html
-│   │   └── static/
-│   │       └── style.css
-│   ├── components/
-│   │   ├── Button.jsx  # Example React component
-│   │   ├── Modal.jsx  # Example React component
-│   │   └── UserList.jsx  # Example React component
-│
-├── tests/
-│   ├── test_main_file.py  # Test file for main (e.g., test_main.py, test_main.js)
-│   └── test_module_file.py  # Test file for module (e.g., test_example.py, test_example.js)
-│
-├── deployment/
-│   ├── requirements.txt  # Dependencies file
-│
-├── docker/
-│   ├── Dockerfile
-│   ├── docker-compose.yml
-│
-├── .gitignore
-├── .editorconfig
-├── LICENSE
-├── README.md
-├── setup.py  # Setup script for Python or other relevant configuration file
-├── CONTRIBUTING.md
-├── CODE_OF_CONDUCT.md
-└── CHANGELOG.md
+- `setup.py`: Configuration for the Python package, including project metadata and dependencies.
+
+### Docker Configuration
+
+- `docker/Dockerfile.dev`: Defines the Docker image for the development environment, based on Ubuntu 24.04, and sets up Conda and necessary Python packages.
+- `docker/docker-compose.dev.yml`: Docker Compose configuration for setting up the development environment.
