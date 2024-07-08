@@ -66,5 +66,5 @@ Dependencies are managed via Conda and are specified in the deploy/requirements.
 
 ### Docker Configuration
 
-- `docker/Dockerfile.dev`: Defines the Docker image for the development environment, based on Ubuntu 24.04, and sets up Conda and necessary Python packages.
+- `docker/Dockerfile.dev`: Defines the Docker image for the development environment, based on Miniconda.
 - `docker/docker-compose.dev.yml`: Docker Compose configuration for setting up the development environment.
