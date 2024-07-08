@@ -1,0 +1,6 @@
+folium
+geopandas
+matplotlib
+pysal
+setuptools
+shapely

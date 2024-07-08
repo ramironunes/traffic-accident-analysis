@@ -49,16 +49,14 @@ RUN conda create -y -n traffic_analysis python=3.11
 # Ensure the conda environment is activated
 RUN echo "source /opt/conda/etc/profile.d/conda.sh && conda activate traffic_analysis" >> ~/.bashrc
 
-# Install required packages in the conda environment
+# Install Orange3
 RUN /bin/bash -c "source /opt/conda/etc/profile.d/conda.sh && conda activate traffic_analysis && conda install -y orange3"
 
-# Set working directory and copy the project files
-WORKDIR /home/app/project
-COPY --chown=app:app src/ ./src/
-COPY --chown=app:app deploy/requirements.txt .
+# Copy the requirements file
+COPY src/config/requirements.txt /home/app/src/config/requirements.txt
 
 # Install Python dependencies in the conda environment
-RUN /bin/bash -c "source /opt/conda/etc/profile.d/conda.sh && conda activate traffic_analysis && pip install -r requirements.txt"
+RUN /bin/bash -c "source /opt/conda/etc/profile.d/conda.sh && conda activate traffic_analysis && pip install -r /home/app/src/config/requirements.txt"
 
 # Set entrypoint
 CMD ["bash"]

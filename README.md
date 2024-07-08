@@ -30,20 +30,26 @@ To install Docker and Docker Compose, follow these steps:
    docker compose -f docker/docker-compose.dev.yml up -d
    ```
 
-3. **Access the Container:**
+3. **Allow X11 connections:**
+   Allow X11 connections:
+   ```bash
+   xhost +local:docker
+   ```
+
+4. **Access the Container:**
    To access the container in interactive mode, run:
    ```bash
    docker compose -f docker/docker-compose.dev.yml exec traffic-analysis bash
    ```
 
-4. **Initialize Conda and Activate the Environment:**
+5. **Initialize Conda and Activate the Environment:**
    Inside the container, initialize Conda and activate the environment:
    ```bash
    source /opt/conda/etc/profile.d/conda.sh
    conda activate traffic_analysis
    ```
 
-5. **Start Orange:**
+6. **Start Orange:**
    Once the environment is activated, start Orange with:
    ```bash
    orange-canvas
