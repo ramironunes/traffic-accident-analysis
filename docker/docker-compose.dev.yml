@@ -16,8 +16,6 @@ services:
       - DISPLAY=${DISPLAY}
     tty: true
     volumes:
-      - ../src:/home/app/project/src
-      - ../deploy/requirements.txt:/home/app/project/requirements.txt
-      - ../..:/home/app/project
+      - ../src:/home/app/src
       - /tmp/.X11-unix:/tmp/.X11-unix
-    working_dir: /home/app/project
+    working_dir: /home/app
