@@ -5,7 +5,7 @@ FROM continuumio/miniconda3:latest
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Etc/UTC
 
-# Install OpenGL and Qt dependencies
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     wget \
     curl \
@@ -32,6 +32,10 @@ RUN apt-get update && apt-get install -y \
     libice6 \
     libx11-xcb1 \
     xauth \
+    gdal-bin \
+    libgdal-dev \
+    build-essential \
+    g++ \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -47,16 +51,19 @@ RUN conda init bash
 RUN conda create -y -n traffic_analysis python=3.11
 
 # Ensure the conda environment is activated
-RUN echo "source /opt/conda/etc/profile.d/conda.sh && conda activate traffic_analysis" >> ~/.bashrc
+RUN echo "source /opt/conda/etc/profile.d/conda.sh && conda activate traffic_analysis" >> /home/app/.bashrc
+
+# Switch to the new shell to make sure conda is activated properly
+SHELL ["/bin/bash", "--login", "-c"]
 
 # Install Orange3
-RUN /bin/bash -c "source /opt/conda/etc/profile.d/conda.sh && conda activate traffic_analysis && conda install -y orange3"
+RUN conda activate traffic_analysis && conda install -y orange3
 
 # Copy the requirements file
 COPY src/config/requirements.txt /home/app/src/config/requirements.txt
 
 # Install Python dependencies in the conda environment
-RUN /bin/bash -c "source /opt/conda/etc/profile.d/conda.sh && conda activate traffic_analysis && pip install -r /home/app/src/config/requirements.txt"
+RUN conda activate traffic_analysis && conda install -c conda-forge gdal rasterio && pip install -r /home/app/src/config/requirements.txt
 
 # Set entrypoint
 CMD ["bash"]
