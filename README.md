@@ -30,8 +30,8 @@ To install Docker and Docker Compose, follow these steps:
    docker compose -f docker/docker-compose.dev.yml up -d
    ```
 
-3. **Permitir conexões X11:**
-   Permitir conexões X11:
+3. **Allow X11 connections:**
+   Allow X11 connections:
    ```bash
    xhost +local:docker
    ```
