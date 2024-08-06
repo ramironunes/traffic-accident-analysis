@@ -1,0 +1,8 @@
+contextily
+folium
+geopandas
+matplotlib
+pysal
+seaborn
+setuptools
+shapely
