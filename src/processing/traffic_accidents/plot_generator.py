@@ -2,7 +2,7 @@
 # ============================================================================
 # @Author: Ramiro Luiz Nunes
 # @Date:   2024-08-05 04:00:23
-# @Info:   Script to perform spatial analysis on traffic accident data
+# @Info:   Script to perform analysis on traffic accident data
 # ============================================================================
 
 
@@ -11,13 +11,7 @@ import os
 
 from create_shapefile import create_shapefile
 from load_data import load_and_prepare_data
-from src.processing.utils.plot_graphs import (
-    plot_accident_cause,
-    plot_accident_density,
-    plot_static_map,
-    plot_vehicle_type,
-    plot_weather_condition,
-)
+from plotter import TrafficAccidentPlotter
 
 
 def main(graph_type: str) -> None:
@@ -31,17 +25,22 @@ def main(graph_type: str) -> None:
     :param graph_type: The type of graph to generate.
     :return: None
     """
-    base_dir = os.path.dirname(os.path.abspath(__file__))
+    base_dir = os.path.abspath(
+        os.path.join(
+            os.path.dirname(__file__),
+            '../../..',
+        )
+    )
     preprocessed_dir = os.path.join(
         base_dir,
-        '../../data/traffic_accidents/all_causes_and_types/preprocessed',
+        'data/traffic_accidents/all_causes_and_types/preprocessed',
     )
     shapefile_dir = os.path.join(
         base_dir,
-        '../../data/traffic_accidents/all_causes_and_types/shapefile',
+        'data/traffic_accidents/all_causes_and_types/shapefile',
     )
-    output_img_dir = os.path.join(base_dir, '../../out/img')
-    output_html_dir = os.path.join(base_dir, '../../out/html')
+    output_img_dir = os.path.join(base_dir, 'out/img')
+    output_html_dir = os.path.join(base_dir, 'out/html')
 
     datasets = [
         'acidentes2017_todas_causas_tipos',
@@ -51,8 +50,10 @@ def main(graph_type: str) -> None:
         'acidentes2021_todas_causas_tipos',
         'acidentes2022_todas_causas_tipos',
         'acidentes2023_todas_causas_tipos',
-        'acidentes2024_todas_causas_tipos'
+        'acidentes2024_todas_causas_tipos',
     ]
+
+    plotter = TrafficAccidentPlotter(output_img_dir)
 
     for dataset_name in datasets:
         preprocessed_file_path = os.path.join(
@@ -63,10 +64,6 @@ def main(graph_type: str) -> None:
             shapefile_dir,
             f'{dataset_name}_mg.shp',
         )
-        static_map_output_path = os.path.join(
-            output_img_dir,
-            f'{dataset_name}_mg_static_map.png',
-        )
 
         # Load and prepare data
         data = load_and_prepare_data(preprocessed_file_path)
@@ -76,15 +73,15 @@ def main(graph_type: str) -> None:
 
         # Generate the specified plot
         if graph_type == 'static_map':
-            plot_static_map(shapefile_output_path, static_map_output_path)
+            plotter.plot_static_map(shapefile_output_path, dataset_name)
         elif graph_type == 'accident_cause':
-            plot_accident_cause(data, dataset_name)
+            plotter.plot_accident_cause(data, dataset_name)
         elif graph_type == 'accident_density':
-            plot_accident_density(data, dataset_name)
+            plotter.plot_accident_density(data, dataset_name)
         elif graph_type == 'weather_condition':
-            plot_weather_condition(data, dataset_name)
+            plotter.plot_weather_condition(data, dataset_name)
         elif graph_type == 'vehicle_type':
-            plot_vehicle_type(data, dataset_name)
+            plotter.plot_vehicle_type(data, dataset_name)
         else:
             print(f"Unknown graph type: {graph_type}")
 

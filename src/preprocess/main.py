@@ -27,11 +27,11 @@ def main() -> None:
     # Traffic accident dataset
     raw_dir = os.path.join(
         base_dir,
-        '../../data/traffic_accidents/all_causes_and_types/raw'
+        'data/traffic_accidents/all_causes_and_types/raw'
     )
     preprocessed_dir = os.path.join(
         base_dir,
-        '../../data/traffic_accidents/all_causes_and_types/preprocessed'
+        'data/traffic_accidents/all_causes_and_types/preprocessed'
     )
     datasets = [
         'acidentes2017_todas_causas_tipos',
