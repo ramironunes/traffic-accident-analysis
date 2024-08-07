@@ -15,7 +15,6 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 
-from shapely.geometry import Point
 from sklearn.neighbors import KernelDensity
 
 
@@ -39,7 +38,11 @@ def plot_accident_cause(data: pd.DataFrame, dataset_name: str) -> None:
     :return: None
     """
     plt.figure(figsize=(12, 8))
-    sns.countplot(data=data, y='causa_acid', order=data['causa_acid'].value_counts().index)
+    sns.countplot(
+        data=data,
+        y='causa_acid',
+        order=data['causa_acid'].value_counts().index
+    )
     plt.title('Distribution of Accident Causes')
     plt.xlabel('Count')
     plt.ylabel('Cause')
@@ -69,14 +72,19 @@ def plot_accident_density(data: pd.DataFrame, dataset_name: str) -> None:
     kde = KernelDensity(bandwidth=0.01, metric='haversine')
     kde.fit(np.radians(xy))
 
-    x, y = np.meshgrid(np.linspace(xy[:, 0].min(), xy[:, 0].max(), 100),
-                       np.linspace(xy[:, 1].min(), xy[:, 1].max(), 100))
+    x, y = np.meshgrid(
+        np.linspace(xy[:, 0].min(), xy[:, 0].max(), 100),
+        np.linspace(xy[:, 1].min(), xy[:, 1].max(), 100),
+    )
     xy_sample = np.vstack([x.ravel(), y.ravel()]).T
     z = np.exp(kde.score_samples(np.radians(xy_sample)))
     z = z.reshape(x.shape)
 
     fig, ax = plt.subplots(figsize=(12, 8))
-    ax.imshow(z, extent=[x.min(), x.max(), y.min(), y.max()], origin='lower', cmap='hot', alpha=0.6)
+    ax.imshow(
+        z, extent=[x.min(), x.max(), y.min(), y.max()],
+        origin='lower', cmap='hot', alpha=0.6,
+    )
     ax.scatter(data['longitude'], data['latitude'], s=1, color='blue')
     ctx.add_basemap(ax, source=ctx.providers.OpenStreetMap.Mapnik)
     plt.title('Density of Traffic Accidents')
@@ -121,7 +129,11 @@ def plot_vehicle_type(data: pd.DataFrame, dataset_name: str) -> None:
     :return: None
     """
     plt.figure(figsize=(12, 8))
-    sns.countplot(y='tipo_veicu', data=data, order=data['tipo_veicu'].value_counts().index)
+    sns.countplot(
+        y='tipo_veicu',
+        data=data,
+        order=data['tipo_veicu'].value_counts().index,
+    )
     plt.title('Distribution of Vehicle Types in Accidents')
     plt.xlabel('Count')
     plt.ylabel('Vehicle Type')
@@ -141,7 +153,11 @@ def plot_weather_condition(data: pd.DataFrame, dataset_name: str) -> None:
     :return: None
     """
     plt.figure(figsize=(12, 8))
-    sns.countplot(y='cond_met', data=data, order=data['cond_met'].value_counts().index)
+    sns.countplot(
+        y='cond_met',
+        data=data,
+        order=data['cond_met'].value_counts().index,
+    )
     plt.title('Distribution of Weather Conditions during Accidents')
     plt.xlabel('Count')
     plt.ylabel('Weather Condition')
