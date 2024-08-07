@@ -1,0 +1,101 @@
+Transação ID,Valor (USD),Localização,Tipo de Transação,Tempo,Categoria,Classificação,Método de Pagamento,Descrição,Status da Transação
+1,7271,"Cidade do México, México",Saque em ATM,2023-01-01 00:00:00,Fraudulenta,OOD,PayPal,Doação para caridade,Pendente
+2,5391,"Berlim, Alemanha",Doação,2023-01-01 02:00:00,Fraudulenta,ID,Cartão de Crédito,Compra de alimentos,Pendente
+3,5735,"Nova York, EUA",Transferência Bancária,2023-01-01 04:00:00,Fraudulenta,OOD,Cartão de Crédito,Compra de alimentos,Pendente
+4,467,"Cidade do México, México",Compra Online,2023-01-01 06:00:00,Fraudulenta,OOD,Cartão de Débito,Compra de alimentos,Concluída
+5,8323,"Londres, Reino Unido",Doação,2023-01-01 09:00:00,Fraudulenta,ID,Transferência Bancária,Compra de alimentos,Pendente
+6,770,"São Paulo, Brasil",Transferência Bancária,2023-01-01 11:00:00,Fraudulenta,ID,Cartão de Débito,Compra de roupas,Concluída
+7,2434,"Nova York, EUA",Saque em ATM,2023-01-01 13:00:00,Fraudulenta,OOD,Cartão de Débito,Compra de eletrônicos,Pendente
+8,5052,"Tóquio, Japão",Saque em ATM,2023-01-01 15:00:00,Fraudulenta,OOD,Cartão de Crédito,Compra de roupas,Cancelada
+9,1185,"Nova York, EUA",Compra em Loja Física,2023-01-01 17:00:00,Fraudulenta,OOD,PayPal,Compra de roupas,Concluída
+10,3386,"Sydney, Austrália",Transferência Bancária,2023-01-01 19:00:00,Fraudulenta,OOD,Cartão de Débito,Doação para caridade,Pendente
+11,6397,"Cidade do México, México",Saque em ATM,2023-01-01 20:00:00,Fraudulenta,OOD,PayPal,Compra de eletrônicos,Cancelada
+12,8667,"Cidade do México, México",Saque em ATM,2023-01-01 21:00:00,Fraudulenta,ID,Cartão de Crédito,Compra de roupas,Cancelada
+13,2559,"Sydney, Austrália",Compra Online,2023-01-01 23:00:00,Fraudulenta,OOD,PayPal,Investimento em criptomoeda,Pendente
+14,2048,"Londres, Reino Unido",Compra Online,2023-01-02 01:00:00,Fraudulenta,ID,Cartão de Débito,Compra de alimentos,Cancelada
+15,9168,"Nova York, EUA",Saque em ATM,2023-01-02 03:00:00,Fraudulenta,ID,Cartão de Crédito,Compra de roupas,Pendente
+16,2735,"Tóquio, Japão",Compra em Loja Física,2023-01-02 06:00:00,Fraudulenta,ID,Cartão de Débito,Investimento em criptomoeda,Pendente
+17,1900,"Paris, França",Transferência Bancária,2023-01-02 09:00:00,Fraudulenta,OOD,PayPal,Compra de roupas,Concluída
+18,3557,"San Francisco, EUA",Saque em ATM,2023-01-02 13:00:00,Fraudulenta,ID,Cartão de Débito,Saque de dinheiro,Concluída
+19,8839,"Mumbai, Índia",Compra Online,2023-01-02 15:00:00,Fraudulenta,OOD,Transferência Bancária,Compra de roupas,Concluída
+20,7514,"Sydney, Austrália",Saque em ATM,2023-01-02 19:00:00,Fraudulenta,OOD,PayPal,Pagamento de serviços,Concluída
+21,9556,"Cidade do México, México",Transferência Bancária,2023-01-02 22:00:00,Fraudulenta,ID,PayPal,Doação para caridade,Cancelada
+22,5487,"Nova York, EUA",Compra Online,2023-01-03 00:00:00,Fraudulenta,OOD,PayPal,Compra de roupas,Concluída
+23,7100,"Mumbai, Índia",Transferência Bancária,2023-01-03 01:00:00,Fraudulenta,OOD,PayPal,Pagamento de serviços,Concluída
+24,776,"Paris, França",Transferência Bancária,2023-01-03 03:00:00,Fraudulenta,OOD,Cartão de Débito,Compra de roupas,Concluída
+25,3153,"Londres, Reino Unido",Doação,2023-01-03 05:00:00,Fraudulenta,OOD,PayPal,Doação para caridade,Pendente
+26,1586,"Cidade do México, México",Compra Online,2023-01-03 06:00:00,Fraudulenta,OOD,PayPal,Saque de dinheiro,Concluída
+27,7556,"Berlim, Alemanha",Transferência Bancária,2023-01-03 08:00:00,Fraudulenta,ID,Transferência Bancária,Doação para caridade,Concluída
+28,3074,"Mumbai, Índia",Compra Online,2023-01-03 09:00:00,Fraudulenta,OOD,PayPal,Pagamento de serviços,Cancelada
+29,1022,"Tóquio, Japão",Saque em ATM,2023-01-03 10:00:00,Fraudulenta,ID,PayPal,Compra de eletrônicos,Concluída
+30,3844,"Nova York, EUA",Doação,2023-01-03 11:00:00,Fraudulenta,ID,PayPal,Investimento em criptomoeda,Pendente
+31,7990,"Londres, Reino Unido",Saque em ATM,2023-01-03 12:00:00,Fraudulenta,OOD,Cartão de Débito,Compra de alimentos,Concluída
+32,6874,"Berlim, Alemanha",Transferência Bancária,2023-01-03 14:00:00,Fraudulenta,ID,PayPal,Pagamento de serviços,Concluída
+33,162,"Berlim, Alemanha",Compra Online,2023-01-03 16:00:00,Fraudulenta,ID,Cartão de Crédito,Compra de roupas,Cancelada
+34,7630,"Nova York, EUA",Compra de Criptomoeda,2023-01-03 19:00:00,Fraudulenta,OOD,Transferência Bancária,Compra de alimentos,Cancelada
+35,9468,"Nova York, EUA",Compra em Loja Física,2023-01-03 20:00:00,Fraudulenta,ID,Cartão de Crédito,Doação para caridade,Concluída
+36,1017,"Sydney, Austrália",Doação,2023-01-03 21:00:00,Fraudulenta,ID,PayPal,Compra de alimentos,Concluída
+37,6440,"Cidade do México, México",Compra em Loja Física,2023-01-03 23:00:00,Fraudulenta,OOD,Cartão de Crédito,Compra de roupas,Cancelada
+38,8530,"Tóquio, Japão",Compra Online,2023-01-04 03:00:00,Fraudulenta,OOD,Transferência Bancária,Compra de eletrônicos,Pendente
+39,879,"Nova York, EUA",Saque em ATM,2023-01-04 04:00:00,Fraudulenta,ID,PayPal,Compra de eletrônicos,Pendente
+40,4860,"Nova York, EUA",Compra Online,2023-01-04 07:00:00,Fraudulenta,OOD,PayPal,Investimento em criptomoeda,Concluída
+41,8572,"San Francisco, EUA",Compra de Criptomoeda,2023-01-04 09:00:00,Fraudulenta,OOD,Cartão de Débito,Compra de alimentos,Pendente
+42,7209,"Cidade do México, México",Transferência Bancária,2023-01-04 11:00:00,Fraudulenta,ID,Cartão de Crédito,Investimento em criptomoeda,Concluída
+43,2063,"Nova York, EUA",Compra Online,2023-01-04 13:00:00,Fraudulenta,ID,Cartão de Débito,Pagamento de serviços,Pendente
+44,8007,"Londres, Reino Unido",Transferência Bancária,2023-01-04 15:00:00,Fraudulenta,ID,Transferência Bancária,Compra de eletrônicos,Pendente
+45,2569,"San Francisco, EUA",Transferência Bancária,2023-01-04 16:00:00,Fraudulenta,OOD,Cartão de Crédito,Investimento em criptomoeda,Concluída
+46,2696,"São Paulo, Brasil",Doação,2023-01-04 19:00:00,Fraudulenta,OOD,Cartão de Crédito,Compra de eletrônicos,Pendente
+47,5259,"Paris, França",Doação,2023-01-04 21:00:00,Fraudulenta,ID,Cartão de Débito,Doação para caridade,Concluída
+48,6737,"Berlim, Alemanha",Compra de Criptomoeda,2023-01-04 23:00:00,Fraudulenta,ID,Cartão de Débito,Compra de alimentos,Concluída
+49,392,"Nova York, EUA",Transferência Bancária,2023-01-05 00:00:00,Fraudulenta,ID,Cartão de Débito,Saque de dinheiro,Concluída
+50,5893,"São Paulo, Brasil",Doação,2023-01-05 01:00:00,Fraudulenta,ID,Transferência Bancária,Investimento em criptomoeda,Concluída
+51,3562,"Berlim, Alemanha",Transferência Bancária,2023-01-05 02:00:00,Fraudulenta,OOD,Cartão de Crédito,Saque de dinheiro,Concluída
+52,6185,"Tóquio, Japão",Transferência Bancária,2023-01-05 03:00:00,Fraudulenta,OOD,Transferência Bancária,Compra de alimentos,Concluída
+53,861,"Mumbai, Índia",Compra em Loja Física,2023-01-01 01:00:00,Normal,ID,Transferência Bancária,Compra de eletrônicos,Concluída
+54,5192,"San Francisco, EUA",Doação,2023-01-01 03:00:00,Normal,ID,Cartão de Débito,Compra de eletrônicos,Cancelada
+55,6266,"Cidade do México, México",Compra Online,2023-01-01 05:00:00,Normal,OOD,Cartão de Crédito,Pagamento de serviços,Pendente
+56,4427,"Berlim, Alemanha",Saque em ATM,2023-01-01 07:00:00,Normal,OOD,PayPal,Doação para caridade,Concluída
+57,5579,"Tóquio, Japão",Transferência Bancária,2023-01-01 08:00:00,Normal,ID,Cartão de Crédito,Compra de roupas,Concluída
+58,1686,"Berlim, Alemanha",Compra de Criptomoeda,2023-01-01 10:00:00,Normal,OOD,Cartão de Crédito,Compra de alimentos,Cancelada
+59,6950,"Londres, Reino Unido",Saque em ATM,2023-01-01 12:00:00,Normal,ID,Cartão de Débito,Doação para caridade,Concluída
+60,5312,"Londres, Reino Unido",Transferência Bancária,2023-01-01 14:00:00,Normal,ID,PayPal,Compra de alimentos,Concluída
+61,6421,"Londres, Reino Unido",Transferência Bancária,2023-01-01 16:00:00,Normal,ID,PayPal,Pagamento de serviços,Cancelada
+62,4556,"Tóquio, Japão",Transferência Bancária,2023-01-01 18:00:00,Normal,OOD,Cartão de Débito,Pagamento de serviços,Concluída
+63,9275,"Mumbai, Índia",Compra Online,2023-01-01 22:00:00,Normal,OOD,Transferência Bancária,Investimento em criptomoeda,Concluída
+64,7850,"Sydney, Austrália",Compra em Loja Física,2023-01-02 00:00:00,Normal,OOD,Cartão de Crédito,Saque de dinheiro,Cancelada
+65,2748,"Cidade do México, México",Transferência Bancária,2023-01-02 02:00:00,Normal,OOD,Cartão de Débito,Doação para caridade,Pendente
+66,9999,"Paris, França",Compra Online,2023-01-02 04:00:00,Normal,OOD,Transferência Bancária,Investimento em criptomoeda,Cancelada
+67,190,"Paris, França",Compra Online,2023-01-02 05:00:00,Normal,ID,Cartão de Débito,Compra de alimentos,Cancelada
+68,3006,"Cidade do México, México",Doação,2023-01-02 07:00:00,Normal,OOD,Cartão de Débito,Compra de roupas,Cancelada
+69,4659,"Cidade do México, México",Compra em Loja Física,2023-01-02 08:00:00,Normal,ID,Cartão de Crédito,Pagamento de serviços,Concluída
+70,7735,"Cidade do México, México",Saque em ATM,2023-01-02 10:00:00,Normal,OOD,Cartão de Débito,Saque de dinheiro,Pendente
+71,1268,"Londres, Reino Unido",Compra em Loja Física,2023-01-02 11:00:00,Normal,OOD,PayPal,Compra de roupas,Pendente
+72,1529,"São Paulo, Brasil",Compra Online,2023-01-02 12:00:00,Normal,ID,Transferência Bancária,Compra de roupas,Pendente
+73,3891,"Sydney, Austrália",Saque em ATM,2023-01-02 14:00:00,Normal,OOD,Cartão de Débito,Doação para caridade,Cancelada
+74,5394,"Tóquio, Japão",Compra em Loja Física,2023-01-02 16:00:00,Normal,ID,Cartão de Débito,Saque de dinheiro,Cancelada
+75,8793,"São Paulo, Brasil",Compra Online,2023-01-02 17:00:00,Normal,OOD,PayPal,Compra de alimentos,Concluída
+76,8434,"Paris, França",Doação,2023-01-02 18:00:00,Normal,OOD,Cartão de Crédito,Pagamento de serviços,Cancelada
+77,2613,"Cidade do México, México",Compra de Criptomoeda,2023-01-02 20:00:00,Normal,ID,Cartão de Crédito,Compra de roupas,Pendente
+78,7042,"Mumbai, Índia",Compra de Criptomoeda,2023-01-02 21:00:00,Normal,ID,Cartão de Crédito,Doação para caridade,Concluída
+79,6236,"Nova York, EUA",Compra Online,2023-01-02 23:00:00,Normal,OOD,PayPal,Compra de alimentos,Concluída
+80,9671,"Mumbai, Índia",Transferência Bancária,2023-01-03 02:00:00,Normal,ID,Transferência Bancária,Doação para caridade,Pendente
+81,8227,"Mumbai, Índia",Saque em ATM,2023-01-03 04:00:00,Normal,OOD,Cartão de Crédito,Investimento em criptomoeda,Pendente
+82,3944,"São Paulo, Brasil",Saque em ATM,2023-01-03 07:00:00,Normal,ID,PayPal,Investimento em criptomoeda,Concluída
+83,9693,"Sydney, Austrália",Doação,2023-01-03 13:00:00,Normal,OOD,Transferência Bancária,Compra de alimentos,Cancelada
+84,5676,"São Paulo, Brasil",Doação,2023-01-03 15:00:00,Normal,OOD,Cartão de Crédito,Doação para caridade,Cancelada
+85,4298,"Mumbai, Índia",Transferência Bancária,2023-01-03 17:00:00,Normal,OOD,Cartão de Crédito,Doação para caridade,Concluída
+86,996,"Paris, França",Compra Online,2023-01-03 18:00:00,Normal,ID,Transferência Bancária,Pagamento de serviços,Pendente
+87,7870,"Paris, França",Compra em Loja Física,2023-01-03 22:00:00,Normal,ID,Transferência Bancária,Investimento em criptomoeda,Pendente
+88,7893,"San Francisco, EUA",Doação,2023-01-04 00:00:00,Normal,ID,Cartão de Crédito,Investimento em criptomoeda,Cancelada
+89,6864,"Londres, Reino Unido",Transferência Bancária,2023-01-04 01:00:00,Normal,ID,PayPal,Compra de alimentos,Concluída
+90,7917,"Nova York, EUA",Compra de Criptomoeda,2023-01-04 02:00:00,Normal,OOD,Cartão de Débito,Compra de alimentos,Concluída
+91,9269,"Berlim, Alemanha",Compra Online,2023-01-04 05:00:00,Normal,ID,Cartão de Crédito,Investimento em criptomoeda,Cancelada
+92,4888,"Nova York, EUA",Saque em ATM,2023-01-04 06:00:00,Normal,OOD,Cartão de Crédito,Saque de dinheiro,Cancelada
+93,6332,"San Francisco, EUA",Doação,2023-01-04 08:00:00,Normal,OOD,Transferência Bancária,Compra de eletrônicos,Cancelada
+94,8685,"São Paulo, Brasil",Saque em ATM,2023-01-04 10:00:00,Normal,OOD,Cartão de Débito,Pagamento de serviços,Pendente
+95,5277,"Tóquio, Japão",Compra Online,2023-01-04 12:00:00,Normal,OOD,Transferência Bancária,Compra de alimentos,Pendente
+96,65,"Nova York, EUA",Saque em ATM,2023-01-04 14:00:00,Normal,ID,Transferência Bancária,Pagamento de serviços,Pendente
+97,5464,"Tóquio, Japão",Doação,2023-01-04 17:00:00,Normal,ID,Cartão de Débito,Doação para caridade,Concluída
+98,2028,"Sydney, Austrália",Doação,2023-01-04 18:00:00,Normal,ID,PayPal,Compra de roupas,Cancelada
+99,9688,"Cidade do México, México",Doação,2023-01-04 20:00:00,Normal,ID,Cartão de Débito,Compra de eletrônicos,Cancelada
+100,5619,"Cidade do México, México",Doação,2023-01-04 22:00:00,Normal,OOD,Cartão de Débito,Compra de roupas,Concluída
