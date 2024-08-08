@@ -15,7 +15,6 @@ __pycache__/
 *.idea/
 *.vscode/
 data/
-out/html/
 node_modules/
 dist/
 build/
