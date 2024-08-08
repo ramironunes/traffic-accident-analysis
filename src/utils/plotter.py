@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import textwrap
 
 from sklearn.neighbors import KernelDensity
 
@@ -113,14 +114,18 @@ class DataPlotter:
         title: str,
         data: pd.DataFrame,
         x: str,
-        y: str,
+        y: str, 
         dataset_name: str,
+        graph_type: str,
         figsize: tuple = (12, 8),
         xlabel: str = '',
         ylabel: str = '',
         palette: str = 'viridis',
         save_as: str = 'png',
         dpi: int = 100,
+        orient: str = 'vertical',
+        exclude_zero: bool = False,
+        limit: int = None,
         **kwargs
     ) -> None:
         """
@@ -131,24 +136,70 @@ class DataPlotter:
         :param x: Column name for the x-axis.
         :param y: Column name for the y-axis.
         :param dataset_name: Name of the dataset for file naming.
+        :param graph_type: Type of the graph for directory structure.
         :param figsize: Size of the figure.
         :param xlabel: Label for the x-axis.
         :param ylabel: Label for the y-axis.
         :param palette: Color palette for the plot.
         :param save_as: File format to save the plot.
         :param dpi: Resolution of the saved plot.
+        :param orient: Orientation of the bar chart ('vertical' or 'horizontal').
+        :param exclude_zero: Flag to exclude categories with zero counts.
+        :param limit: Limit the number of data points displayed.
         :param kwargs: Additional keyword arguments for sns.barplot.
         :return: None
         """
         plt.figure(figsize=figsize)
-        sns.barplot(data=data, x=x, y=y, palette=palette, **kwargs)
+
+        if orient == 'horizontal':
+            # Check if the column y exists in the DataFrame
+            if y not in data.columns:
+                raise KeyError(f"Column '{y}' does not exist in the DataFrame")
+
+            # Count the values in the y column and create a new DataFrame with counts
+            count_data = data[y].value_counts().reset_index()
+            count_data.columns = [y, x]
+
+            # Exclude zero counts if the flag is set
+            if exclude_zero:
+                count_data = count_data[count_data[x] > 0]
+
+            # Limit the number of data points if the limit is set
+            if limit is not None:
+                count_data = count_data.head(limit)
+
+            # Plot horizontal bar chart
+            sns.barplot(data=count_data, x=x, y=y, palette=palette, **kwargs)
+            plt.xlabel(xlabel or x)
+            plt.ylabel(ylabel or y)
+        else:
+            # Check if the column x exists in the DataFrame
+            if x not in data.columns:
+                raise KeyError(f"Column '{x}' does not exist in the DataFrame")
+
+            # Count the values in the x column and create a new DataFrame with counts
+            count_data = data[x].value_counts().reset_index()
+            count_data.columns = [x, y]
+
+            # Exclude zero counts if the flag is set
+            if exclude_zero:
+                count_data = count_data[count_data[y] > 0]
+
+            # Limit the number of data points if the limit is set
+            if limit is not None:
+                count_data = count_data.head(limit)
+
+            # Plot vertical bar chart
+            sns.barplot(data=count_data, x=x, y=y, palette=palette, **kwargs)
+            plt.xlabel(xlabel or x)
+            plt.ylabel(ylabel or y)
+
         plt.title(title)
-        plt.xlabel(xlabel or x)
-        plt.ylabel(ylabel or y)
         plt.tight_layout()
 
+        # Update output_path to include the type of plot
         output_path = os.path.join(
-            self.output_dir, f'{dataset_name}_bar_chart.{save_as}'
+            self.output_dir, graph_type, f'{dataset_name}_bar_chart.{save_as}'
         )
         self.ensure_directory_exists(os.path.dirname(output_path))
         plt.savefig(output_path, dpi=dpi)
@@ -158,35 +209,80 @@ class DataPlotter:
         self,
         title: str,
         data: pd.DataFrame,
-        labels: str,
-        values: str,
+        labels_col: str,
+        values_col: str,
         dataset_name: str,
+        graph_type: str,
         figsize: tuple = (8, 8),
         save_as: str = 'png',
         dpi: int = 100,
+        legend: bool = False,
+        limit: int = None,
+        colors: list = None,
+        wrap_length: int = 50,
         **kwargs
     ) -> None:
         """
-        Plot a pie chart with customizable settings.
+        Plot a pie chart with labels showing values and percentages.
 
         :param title: Title of the plot.
         :param data: DataFrame containing the data.
-        :param labels: Column name for the pie labels.
-        :param values: Column name for the pie values.
+        :param labels_col: Column name for the labels.
+        :param values_col: Column name for the values.
         :param dataset_name: Name of the dataset for file naming.
+        :param graph_type: Type of the graph for directory structure.
         :param figsize: Size of the figure.
         :param save_as: File format to save the plot.
         :param dpi: Resolution of the saved plot.
+        :param legend: Flag to show legend instead of labels on the pie chart.
+        :param limit: Limit the number of data points displayed.
+        :param colors: List of colors for the pie chart.
+        :param wrap_length: Maximum length of label lines before wrapping.
         :param kwargs: Additional keyword arguments for plt.pie.
         :return: None
         """
         plt.figure(figsize=figsize)
-        plt.pie(data[values], labels=data[labels], **kwargs)
+
+        # Get the labels and values for the pie chart
+        labels = data[labels_col]
+        values = data[values_col]
+
+        # Limit the number of data points if the limit is set
+        if limit is not None:
+            labels = labels.head(limit)
+            values = values.head(limit)
+
+        # Wrap labels to specified length
+        labels = [textwrap.fill(label, wrap_length) for label in labels]
+
+        # Define a color palette for color blindness if colors are not provided
+        if colors is None:
+            colors = sns.color_palette("colorblind", len(labels))
+
+        # Create the pie chart
+        wedges, texts, autotexts = plt.pie(
+            values, labels=None if legend else labels, autopct='%1.1f%%', colors=colors, **kwargs
+        )
+
+        if legend:
+            # Display a legend with the labels and colors below the pie chart
+            plt.legend(wedges, labels, title=labels_col, loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2)
+
+        # Customize the font properties for the labels and percentages
+        for text in texts:
+            text.set_fontsize(10)
+        for autotext in autotexts:
+            autotext.set_fontsize(10)
+            autotext.set_color('white')
+
         plt.title(title)
         plt.tight_layout()
 
+        print("output_dir", self.output_dir)
+
+        # Update output_path to include the type of plot
         output_path = os.path.join(
-            self.output_dir, f'{dataset_name}_pie_chart.{save_as}'
+            self.output_dir, graph_type, f'{dataset_name}_pie_chart.{save_as}'
         )
         self.ensure_directory_exists(os.path.dirname(output_path))
         plt.savefig(output_path, dpi=dpi)
@@ -196,12 +292,17 @@ class DataPlotter:
         self,
         data: pd.DataFrame,
         dataset_name: str,
+        graph_type: str,
         figsize: tuple = (12, 8),
-        cmap: str = 'hot',
+        cmap: str = 'viridis',
         scatter_color: str = 'blue',
         alpha: float = 0.6,
         save_as: str = 'png',
         dpi: int = 100,
+        title: str = 'Spatial Density',
+        xlabel: str = 'Longitude',
+        ylabel: str = 'Latitude',
+        add_colorbar: bool = True,
         **kwargs
     ) -> None:
         """
@@ -209,12 +310,17 @@ class DataPlotter:
 
         :param data: DataFrame containing the data with 'latitude' and 'longitude' columns.
         :param dataset_name: Name of the dataset for file naming.
+        :param graph_type: Type of the graph for directory structure.
         :param figsize: Size of the figure.
         :param cmap: Color map for the density plot.
         :param scatter_color: Color for the scatter points.
         :param alpha: Transparency level for the density overlay.
         :param save_as: File format to save the plot.
         :param dpi: Resolution of the saved plot.
+        :param title: Title of the plot.
+        :param xlabel: Label for the x-axis.
+        :param ylabel: Label for the y-axis.
+        :param add_colorbar: Whether to add a colorbar to the plot.
         :param kwargs: Additional keyword arguments for kde and plotting.
         :return: None
         """
@@ -237,18 +343,23 @@ class DataPlotter:
         z = z.reshape(x.shape)
 
         fig, ax = plt.subplots(figsize=figsize)
-        ax.imshow(
+        img = ax.imshow(
             z, extent=[x.min(), x.max(), y.min(), y.max()],
-            origin='lower', cmap=cmap, alpha=alpha,
+            origin='lower', cmap=cmap, alpha=alpha, interpolation='nearest'
         )
         ax.scatter(data['longitude'], data['latitude'], s=1, color=scatter_color)
         ctx.add_basemap(ax, source=ctx.providers.OpenStreetMap.Mapnik)
-        plt.title('Spatial Density')
-        plt.xlabel('Longitude')
-        plt.ylabel('Latitude')
+        plt.title(title)
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
 
+        if add_colorbar:
+            cbar = plt.colorbar(img, ax=ax, orientation='vertical')
+            cbar.set_label('Density')
+
+        # Update output_path to include the type of plot
         output_path = os.path.join(
-            self.output_dir, f'{dataset_name}_spatial_density.{save_as}'
+            self.output_dir, graph_type, f'{dataset_name}_spatial_density.{save_as}'
         )
         self.ensure_directory_exists(os.path.dirname(output_path))
         plt.savefig(output_path, dpi=dpi)
@@ -305,12 +416,16 @@ class DataPlotter:
         data: pd.DataFrame,
         column: str,
         dataset_name: str,
+        graph_type: str,
         figsize: tuple = (12, 8),
         xlabel: str = 'Count',
         ylabel: str = '',
         palette: str = 'viridis',
         save_as: str = 'png',
         dpi: int = 100,
+        orient: str = 'vertical',
+        exclude_zero: bool = False,
+        limit: int = None,
         **kwargs
     ) -> None:
         """
@@ -320,30 +435,58 @@ class DataPlotter:
         :param data: DataFrame containing the data.
         :param column: Column name for the count distribution.
         :param dataset_name: Name of the dataset for file naming.
+        :param graph_type: Type of the graph for directory structure.
         :param figsize: Size of the figure.
         :param xlabel: Label for the x-axis.
         :param ylabel: Label for the y-axis.
         :param palette: Color palette for the plot.
         :param save_as: File format to save the plot.
         :param dpi: Resolution of the saved plot.
+        :param orient: Orientation of the bar chart ('vertical' or 'horizontal').
+        :param exclude_zero: Flag to exclude categories with zero counts.
+        :param limit: Limit the number of categories displayed.
         :param kwargs: Additional keyword arguments for sns.countplot.
         :return: None
         """
         plt.figure(figsize=figsize)
-        sns.countplot(
-            data=data,
-            y=column,
-            order=data[column].value_counts().index,
-            palette=palette,
-            **kwargs
-        )
+
+        # Order the data by count
+        ordered_data = data[column].value_counts()
+        if exclude_zero:
+            ordered_data = ordered_data[ordered_data > 0]
+        if limit is not None:
+            ordered_data = ordered_data.head(limit)
+
+        ordered_data = ordered_data.reset_index()
+        ordered_data.columns = [column, 'count']
+
+        if orient == 'horizontal':
+            sns.barplot(
+                data=ordered_data,
+                x='count',
+                y=column,
+                palette=palette,
+                **kwargs
+            )
+            plt.xlabel(xlabel)
+            plt.ylabel(ylabel or column)
+        else:
+            sns.barplot(
+                data=ordered_data,
+                x=column,
+                y='count',
+                palette=palette,
+                **kwargs
+            )
+            plt.xlabel(xlabel)
+            plt.ylabel(ylabel or 'Count')
+
         plt.title(title)
-        plt.xlabel(xlabel)
-        plt.ylabel(ylabel or column)
         plt.tight_layout()
 
+        # Update output_path to include the type of plot
         output_path = os.path.join(
-            self.output_dir, f'{dataset_name}_count_distribution.{save_as}'
+            self.output_dir, graph_type, f'{dataset_name}_count_distribution.{save_as}'
         )
         self.ensure_directory_exists(os.path.dirname(output_path))
         plt.savefig(output_path, dpi=dpi)

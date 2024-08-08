@@ -90,7 +90,7 @@ def main(graph_type: str) -> None:
 
     # Ensure the graph type directory exists using the DataPlotter method
     plotter = DataPlotter(output_img_dir)
-    graph_output_dir = os.path.join(output_img_dir, graph_type)
+    graph_output_dir = os.path.join(output_img_dir)
     plotter.ensure_directory_exists(graph_output_dir)
     plotter.output_dir = graph_output_dir  # Update the output directory for the plotter
 
@@ -111,41 +111,76 @@ def main(graph_type: str) -> None:
         create_shapefile(data, shapefile_output_path)
 
         # Generate the specified plot
-        if graph_type == 'accident_cause':
+        if graph_type == 'accident_cause_bar':
             plotter.plot_bar_chart(
                 title=f'Accident Cause Distribution for {dataset_name}',
                 data=data,
-                x='causa_acid',
-                y='count',
-                dataset_name=dataset_name,
-                palette='viridis'
+                x='count',
+                y='causa_acid',
+                dataset_name=f'{dataset_name}_mg',
+                graph_type='accident_cause/bar',
+                palette='viridis',
+                orient='horizontal',
+                exclude_zero=True,
+                limit=10,
+            )
+        elif graph_type == 'accident_cause_pie':
+            # Prepare the data for the pie chart
+            count_data = data['causa_acid'].value_counts().reset_index()
+            count_data.columns = ['causa_acid', 'count']
+
+            plotter.plot_pie_chart(
+                title=f'Accident Cause Distribution for {dataset_name}',
+                data=count_data,
+                labels_col='causa_acid',
+                values_col='count',
+                dataset_name=f'{dataset_name}_mg',
+                graph_type='accident_cause/pie',
+                legend=True,
+                limit=10,
             )
         elif graph_type == 'accident_density':
             plotter.plot_spatial_density(
                 data=data,
-                dataset_name=dataset_name
+                dataset_name=f'{dataset_name}_mg',
+                graph_type='accident_density',
+                title=f'Spatial Density of Traffic Accidents for {dataset_name}',
+                xlabel='Longitude',
+                ylabel='Latitude',
+                cmap='viridis',
+                scatter_color='blue',
+                alpha=0.6,
+                add_colorbar=True,
             )
         elif graph_type == 'static_map':
             plotter.plot_spatial_data(
                 title=f'Static Map for {dataset_name}',
                 shapefile_path=shapefile_output_path,
-                dataset_name=dataset_name
+                dataset_name=f'{dataset_name}_mg',
             )
         elif graph_type == 'vehicle_type':
             plotter.plot_count_distribution(
                 title=f'Vehicle Type Distribution for {dataset_name}',
                 data=data,
                 column='tipo_veicu',
-                dataset_name=dataset_name,
-                palette='viridis'
+                dataset_name=f'{dataset_name}_mg',
+                graph_type='vehicle_type',
+                palette='viridis',
+                orient='horizontal',
+                exclude_zero=True,
+                limit=10,
             )
         elif graph_type == 'weather_condition':
             plotter.plot_count_distribution(
                 title=f'Weather Condition Distribution for {dataset_name}',
                 data=data,
                 column='cond_met',
-                dataset_name=dataset_name,
-                palette='viridis'
+                dataset_name=f'{dataset_name}_mg',
+                graph_type='weather_condition',
+                palette='viridis',
+                orient='horizontal',
+                exclude_zero=True,
+                limit=10,
             )
         else:
             print(f"Unknown graph type: {graph_type}")
