@@ -9,9 +9,11 @@
 import os
 import sys
 import pandas as pd
+import numpy as np
 
 from data_loader import get_file_paths, load_preprocessed_data
 from plot_utils import plot_comparison_chart, export_to_excel
+from sklearn.metrics import mean_squared_error, mean_absolute_error
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
@@ -62,6 +64,21 @@ def load_data(base_dir: str) -> pd.DataFrame:
     return merged_data
 
 
+def calculate_metrics(
+    real_accidents: np.ndarray, predicted_accidents: np.ndarray
+) -> dict:
+    """
+    Calculate evaluation metrics for model performance.
+    """
+    metrics = {
+        "RMSE": np.sqrt(mean_squared_error(real_accidents, predicted_accidents)),
+        "MAE": mean_absolute_error(real_accidents, predicted_accidents),
+        "MAPE": np.mean(np.abs((real_accidents - predicted_accidents) / real_accidents))
+        * 100,
+    }
+    return metrics
+
+
 def export_training_testing_data(
     br: str, br_data: pd.DataFrame, forecast_data: pd.DataFrame, output_dir: str
 ) -> None:
@@ -79,17 +96,21 @@ def export_forecast_results(
     forecast_data: pd.DataFrame,
     predicted_accidents: pd.Series,
     output_dir: str,
+    metrics: dict,
 ) -> None:
     """
-    Export the actual and predicted data to an Excel file.
+    Export the actual and predicted data, along with evaluation metrics, to an Excel file.
     """
     output_path = os.path.join(output_dir, f"BR_{br}_forecast_results_2023.xlsx")
     results_df = forecast_data.copy()
     results_df["Predicted Accidents"] = predicted_accidents
     results_df["Error"] = results_df["accidents"] - results_df["Predicted Accidents"]
 
+    metrics_df = pd.DataFrame([metrics])
+
     with pd.ExcelWriter(output_path) as writer:
         results_df.to_excel(writer, sheet_name="Forecast Results", index=False)
+        metrics_df.to_excel(writer, sheet_name="Metrics", index=False)
 
 
 def train_sarimax_model(br_data: pd.DataFrame) -> SARIMAX:
@@ -144,8 +165,14 @@ def generate_forecast(
         real_accidents = forecast_data["accidents"].values[:min_length]
         predicted_accidents = predicted_accidents[:min_length]
 
+        # Calculate evaluation metrics
+        metrics = calculate_metrics(real_accidents, predicted_accidents)
+        print(f"Evaluation Metrics for BR-{br}: {metrics}")
+
         # Export the forecast results (actual vs predicted) to Excel
-        export_forecast_results(br, forecast_data, predicted_accidents, output_img_dir)
+        export_forecast_results(
+            br, forecast_data, predicted_accidents, output_img_dir, metrics
+        )
 
         # Generate comparison chart for 2023
         plot_comparison_chart(forecast_data, predicted_accidents, 2023, output_img_dir)
@@ -153,6 +180,42 @@ def generate_forecast(
 
     except ValueError as e:
         print(f"Failed to forecast for BR-{br} in 2023: {e}")
+
+
+def perform_rolling_window_validation(
+    data: pd.DataFrame, initial_train_size: int, window_size: int
+):
+    """
+    Perform rolling window validation on SARIMAX model.
+    """
+    n_splits = (len(data) - initial_train_size) // window_size
+
+    for i in range(n_splits):
+        train_data = data.iloc[: initial_train_size + i * window_size]
+        test_data = data.iloc[
+            initial_train_size + i * window_size : initial_train_size
+            + (i + 1) * window_size
+        ]
+
+        print(f"Training on window {i+1}/{n_splits}...")
+
+        try:
+            sarimax_result = train_sarimax_model(train_data)
+            predictions = sarimax_result.get_forecast(
+                steps=len(test_data), exog=test_data["traffic_volume"]
+            )
+            predicted_accidents = predictions.predicted_mean
+
+            # Calculate metrics
+            metrics = calculate_metrics(
+                test_data["accidents"].values, predicted_accidents.values
+            )
+            print(f"Metrics for window {i+1}: {metrics}")
+
+            # Optionally, export or store these metrics for analysis
+
+        except ValueError as e:
+            print(f"Failed to train SARIMAX model on window {i+1}: {e}")
 
 
 def process_br_data(weekly_data: pd.DataFrame, output_img_dir: str) -> None:
