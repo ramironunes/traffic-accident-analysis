@@ -16,6 +16,7 @@ import pandas as pd
 import seaborn as sns
 import textwrap
 
+from graphviz import Digraph
 from sklearn.neighbors import KernelDensity
 
 
@@ -498,3 +499,103 @@ class DataPlotter:
         self.ensure_directory_exists(os.path.dirname(output_path))
         plt.savefig(output_path, dpi=dpi)
         plt.close()
+
+    def create_improved_sarimax_diagram(output_path: str) -> None:
+        """
+        Creates an improved diagram illustrating the components of the SARIMAX model.
+        """
+        # Create a Digraph object
+        dot = Digraph(comment="Improved SARIMAX Model Components")
+
+        # Add nodes with different shapes and colors
+        dot.node(
+            "A",
+            "AR (AutoRegressive)",
+            shape="ellipse",
+            style="filled",
+            color="lightblue",
+        )
+        dot.node(
+            "I", "I (Integrated)", shape="ellipse", style="filled", color="lightyellow"
+        )
+        dot.node(
+            "M",
+            "MA (Moving Average)",
+            shape="ellipse",
+            style="filled",
+            color="lightgreen",
+        )
+        dot.node("S", "Seasonality", shape="ellipse", style="filled", color="lightpink")
+        dot.node(
+            "X",
+            "Exogenous Variables\n(Traffic Volume)",
+            shape="ellipse",
+            style="filled",
+            color="lightcoral",
+        )
+        dot.node(
+            "SARIMAX", "SARIMAX", shape="ellipse", style="filled", color="lightgrey"
+        )
+
+        # Define the edges (connections)
+        dot.edge("A", "SARIMAX")
+        dot.edge("I", "SARIMAX")
+        dot.edge("M", "SARIMAX")
+        dot.edge("S", "SARIMAX")
+        dot.edge("X", "SARIMAX")
+
+        # Save the diagram to a file
+        dot.render(output_path, format="png", cleanup=True)
+        print(f"Improved diagram saved to {output_path}.png")
+
+    def create_sarimax_data_flow_diagram(output_path: str) -> None:
+        """
+        Creates a data flow diagram illustrating how traffic volume data is used
+        in the SARIMAX model to predict traffic accidents.
+        """
+        # Create a Digraph object
+        dot = Digraph(comment="SARIMAX Data Flow Diagram")
+
+        # Define nodes for the data flow
+        dot.node(
+            "Data", "Traffic Data", shape="box", style="filled", color="lightyellow"
+        )
+        dot.node(
+            "Preprocessing",
+            "Preprocessing",
+            shape="box",
+            style="filled",
+            color="lightblue",
+        )
+        dot.node(
+            "Exogenous",
+            "Exogenous Variables\n(Traffic Volume)",
+            shape="box",
+            style="filled",
+            color="lightcoral",
+        )
+        dot.node(
+            "SARIMAX",
+            "SARIMAX Model",
+            shape="ellipse",
+            style="filled",
+            color="lightgrey",
+        )
+        dot.node(
+            "Forecast",
+            "Predicted Accidents",
+            shape="box",
+            style="filled",
+            color="lightgreen",
+        )
+
+        # Define edges to show data flow
+        dot.edge("Data", "Preprocessing", label="Load & Merge Data")
+        dot.edge("Preprocessing", "Exogenous", label="Extract Exogenous Variables")
+        dot.edge("Preprocessing", "SARIMAX", label="Pass to SARIMAX Model")
+        dot.edge("Exogenous", "SARIMAX", label="Use as Exogenous Variables")
+        dot.edge("SARIMAX", "Forecast", label="Generate Predictions")
+
+        # Save the diagram to a file
+        dot.render(output_path, format="png", cleanup=True)
+        print(f"Data flow diagram saved to {output_path}.png")

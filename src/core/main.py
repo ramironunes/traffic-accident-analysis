@@ -5,13 +5,14 @@
 # @Info:   Main script to train and forecast using SARIMAX model on traffic data
 # ============================================================================
 
+
 import os
 import sys
 import pandas as pd
 
-from statsmodels.tsa.statespace.sarimax import SARIMAX
 from data_loader import get_file_paths, load_preprocessed_data
 from plot_utils import plot_comparison_chart, export_to_excel
+from statsmodels.tsa.statespace.sarimax import SARIMAX
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 

@@ -1,6 +1,7 @@
 contextily
 folium
 geopandas
+graphviz
 matplotlib
 numpy
 pmdarima
