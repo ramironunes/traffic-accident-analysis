@@ -16,6 +16,7 @@ import pandas as pd
 import seaborn as sns
 import textwrap
 
+from graphviz import Digraph
 from sklearn.neighbors import KernelDensity
 
 
@@ -23,8 +24,8 @@ class DataPlotter:
     """
     A class used to plot various types of graphs for data analysis.
 
-    This class provides methods to plot various types of graphs such as 
-    bar charts, pie charts, spatial analyses, and more. Each plotting 
+    This class provides methods to plot various types of graphs such as
+    bar charts, pie charts, spatial analyses, and more. Each plotting
     function allows for customization through various parameters.
 
     Attributes:
@@ -41,7 +42,7 @@ class DataPlotter:
         title: str,
         data: pd.DataFrame,
         x: str,
-        y: str, 
+        y: str,
         dataset_name: str,
         **kwargs
     ) -> None
@@ -50,7 +51,7 @@ class DataPlotter:
     plot_pie_chart(
         title: str,
         data: pd.DataFrame,
-        labels: str, 
+        labels: str,
         values: str,
         dataset_name: str,
         **kwargs
@@ -59,7 +60,7 @@ class DataPlotter:
 
     plot_spatial_density(
         data: pd.DataFrame,
-        dataset_name: str, 
+        dataset_name: str,
         **kwargs
     ) -> None
         Plot the density of data points on a map with customizable settings.
@@ -75,7 +76,7 @@ class DataPlotter:
     plot_count_distribution(
         title: str,
         data: pd.DataFrame,
-        column: str, 
+        column: str,
         dataset_name: str,
         **kwargs
     ) -> None
@@ -114,19 +115,19 @@ class DataPlotter:
         title: str,
         data: pd.DataFrame,
         x: str,
-        y: str, 
+        y: str,
         dataset_name: str,
         graph_type: str,
         figsize: tuple = (12, 8),
-        xlabel: str = '',
-        ylabel: str = '',
-        palette: str = 'viridis',
-        save_as: str = 'png',
+        xlabel: str = "",
+        ylabel: str = "",
+        palette: str = "viridis",
+        save_as: str = "png",
         dpi: int = 100,
-        orient: str = 'vertical',
+        orient: str = "vertical",
         exclude_zero: bool = False,
         limit: int = None,
-        **kwargs
+        **kwargs,
     ) -> None:
         """
         Plot a bar chart with customizable settings.
@@ -151,7 +152,7 @@ class DataPlotter:
         """
         plt.figure(figsize=figsize)
 
-        if orient == 'horizontal':
+        if orient == "horizontal":
             # Check if the column y exists in the DataFrame
             if y not in data.columns:
                 raise KeyError(f"Column '{y}' does not exist in the DataFrame")
@@ -199,7 +200,7 @@ class DataPlotter:
 
         # Update output_path to include the type of plot
         output_path = os.path.join(
-            self.output_dir, graph_type, f'{dataset_name}_bar_chart.{save_as}'
+            self.output_dir, graph_type, f"{dataset_name}_bar_chart.{save_as}"
         )
         self.ensure_directory_exists(os.path.dirname(output_path))
         plt.savefig(output_path, dpi=dpi)
@@ -214,13 +215,13 @@ class DataPlotter:
         dataset_name: str,
         graph_type: str,
         figsize: tuple = (8, 8),
-        save_as: str = 'png',
+        save_as: str = "png",
         dpi: int = 100,
         legend: bool = False,
         limit: int = None,
         colors: list = None,
         wrap_length: int = 50,
-        **kwargs
+        **kwargs,
     ) -> None:
         """
         Plot a pie chart with labels showing values and percentages.
@@ -261,19 +262,30 @@ class DataPlotter:
 
         # Create the pie chart
         wedges, texts, autotexts = plt.pie(
-            values, labels=None if legend else labels, autopct='%1.1f%%', colors=colors, **kwargs
+            values,
+            labels=None if legend else labels,
+            autopct="%1.1f%%",
+            colors=colors,
+            **kwargs,
         )
 
         if legend:
             # Display a legend with the labels and colors below the pie chart
-            plt.legend(wedges, labels, title=labels_col, loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2)
+            plt.legend(
+                wedges,
+                labels,
+                title=labels_col,
+                loc="upper center",
+                bbox_to_anchor=(0.5, -0.1),
+                ncol=2,
+            )
 
         # Customize the font properties for the labels and percentages
         for text in texts:
             text.set_fontsize(10)
         for autotext in autotexts:
             autotext.set_fontsize(10)
-            autotext.set_color('white')
+            autotext.set_color("white")
 
         plt.title(title)
         plt.tight_layout()
@@ -282,7 +294,7 @@ class DataPlotter:
 
         # Update output_path to include the type of plot
         output_path = os.path.join(
-            self.output_dir, graph_type, f'{dataset_name}_pie_chart.{save_as}'
+            self.output_dir, graph_type, f"{dataset_name}_pie_chart.{save_as}"
         )
         self.ensure_directory_exists(os.path.dirname(output_path))
         plt.savefig(output_path, dpi=dpi)
@@ -294,16 +306,16 @@ class DataPlotter:
         dataset_name: str,
         graph_type: str,
         figsize: tuple = (12, 8),
-        cmap: str = 'viridis',
-        scatter_color: str = 'blue',
+        cmap: str = "viridis",
+        scatter_color: str = "blue",
         alpha: float = 0.6,
-        save_as: str = 'png',
+        save_as: str = "png",
         dpi: int = 100,
-        title: str = 'Spatial Density',
-        xlabel: str = 'Longitude',
-        ylabel: str = 'Latitude',
+        title: str = "Spatial Density",
+        xlabel: str = "Longitude",
+        ylabel: str = "Latitude",
         add_colorbar: bool = True,
-        **kwargs
+        **kwargs,
     ) -> None:
         """
         Plot the density of data points on a map with customizable settings.
@@ -324,14 +336,14 @@ class DataPlotter:
         :param kwargs: Additional keyword arguments for kde and plotting.
         :return: None
         """
-        data = data.dropna(subset=['latitude', 'longitude'])
-        xy = np.vstack([data['longitude'], data['latitude']]).T
+        data = data.dropna(subset=["latitude", "longitude"])
+        xy = np.vstack([data["longitude"], data["latitude"]]).T
 
         if xy.size == 0:
             print(f"No valid data for {dataset_name}. Skipping density plot.")
             return
 
-        kde = KernelDensity(bandwidth=0.01, metric='haversine')
+        kde = KernelDensity(bandwidth=0.01, metric="haversine")
         kde.fit(np.radians(xy))
 
         x, y = np.meshgrid(
@@ -344,22 +356,26 @@ class DataPlotter:
 
         fig, ax = plt.subplots(figsize=figsize)
         img = ax.imshow(
-            z, extent=[x.min(), x.max(), y.min(), y.max()],
-            origin='lower', cmap=cmap, alpha=alpha, interpolation='nearest'
+            z,
+            extent=[x.min(), x.max(), y.min(), y.max()],
+            origin="lower",
+            cmap=cmap,
+            alpha=alpha,
+            interpolation="nearest",
         )
-        ax.scatter(data['longitude'], data['latitude'], s=1, color=scatter_color)
+        ax.scatter(data["longitude"], data["latitude"], s=1, color=scatter_color)
         ctx.add_basemap(ax, source=ctx.providers.OpenStreetMap.Mapnik)
         plt.title(title)
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
 
         if add_colorbar:
-            cbar = plt.colorbar(img, ax=ax, orientation='vertical')
-            cbar.set_label('Density')
+            cbar = plt.colorbar(img, ax=ax, orientation="vertical")
+            cbar.set_label("Density")
 
         # Update output_path to include the type of plot
         output_path = os.path.join(
-            self.output_dir, graph_type, f'{dataset_name}_spatial_density.{save_as}'
+            self.output_dir, graph_type, f"{dataset_name}_spatial_density.{save_as}"
         )
         self.ensure_directory_exists(os.path.dirname(output_path))
         plt.savefig(output_path, dpi=dpi)
@@ -371,12 +387,12 @@ class DataPlotter:
         shapefile_path: str,
         dataset_name: str,
         figsize: tuple = (12, 8),
-        color: str = 'red',
+        color: str = "red",
         markersize: int = 5,
         alpha: float = 0.5,
-        save_as: str = 'png',
+        save_as: str = "png",
         dpi: int = 100,
-        **kwargs
+        **kwargs,
     ) -> None:
         """
         Plot a static map using a shapefile with customizable settings.
@@ -400,11 +416,11 @@ class DataPlotter:
         gdf.plot(ax=ax, color=color, markersize=markersize, alpha=alpha, **kwargs)
         ctx.add_basemap(ax, source=ctx.providers.OpenStreetMap.Mapnik)
         plt.title(title)
-        plt.xlabel('Longitude')
-        plt.ylabel('Latitude')
+        plt.xlabel("Longitude")
+        plt.ylabel("Latitude")
 
         output_path = os.path.join(
-            self.output_dir, f'{dataset_name}_spatial_data.{save_as}'
+            self.output_dir, f"{dataset_name}_spatial_data.{save_as}"
         )
         self.ensure_directory_exists(os.path.dirname(output_path))
         plt.savefig(output_path, dpi=dpi)
@@ -418,15 +434,15 @@ class DataPlotter:
         dataset_name: str,
         graph_type: str,
         figsize: tuple = (12, 8),
-        xlabel: str = 'Count',
-        ylabel: str = '',
-        palette: str = 'viridis',
-        save_as: str = 'png',
+        xlabel: str = "Count",
+        ylabel: str = "",
+        palette: str = "viridis",
+        save_as: str = "png",
         dpi: int = 100,
-        orient: str = 'vertical',
+        orient: str = "vertical",
         exclude_zero: bool = False,
         limit: int = None,
-        **kwargs
+        **kwargs,
     ) -> None:
         """
         Plot the count distribution of a column with customizable settings.
@@ -458,36 +474,128 @@ class DataPlotter:
             ordered_data = ordered_data.head(limit)
 
         ordered_data = ordered_data.reset_index()
-        ordered_data.columns = [column, 'count']
+        ordered_data.columns = [column, "count"]
 
-        if orient == 'horizontal':
+        if orient == "horizontal":
             sns.barplot(
-                data=ordered_data,
-                x='count',
-                y=column,
-                palette=palette,
-                **kwargs
+                data=ordered_data, x="count", y=column, palette=palette, **kwargs
             )
             plt.xlabel(xlabel)
             plt.ylabel(ylabel or column)
         else:
             sns.barplot(
-                data=ordered_data,
-                x=column,
-                y='count',
-                palette=palette,
-                **kwargs
+                data=ordered_data, x=column, y="count", palette=palette, **kwargs
             )
             plt.xlabel(xlabel)
-            plt.ylabel(ylabel or 'Count')
+            plt.ylabel(ylabel or "Count")
 
         plt.title(title)
         plt.tight_layout()
 
         # Update output_path to include the type of plot
         output_path = os.path.join(
-            self.output_dir, graph_type, f'{dataset_name}_count_distribution.{save_as}'
+            self.output_dir, graph_type, f"{dataset_name}_count_distribution.{save_as}"
         )
         self.ensure_directory_exists(os.path.dirname(output_path))
         plt.savefig(output_path, dpi=dpi)
         plt.close()
+
+    def create_improved_sarimax_diagram(output_path: str) -> None:
+        """
+        Creates an improved diagram illustrating the components of the SARIMAX model.
+        """
+        # Create a Digraph object
+        dot = Digraph(comment="Improved SARIMAX Model Components")
+
+        # Add nodes with different shapes and colors
+        dot.node(
+            "A",
+            "AR (AutoRegressive)",
+            shape="ellipse",
+            style="filled",
+            color="lightblue",
+        )
+        dot.node(
+            "I", "I (Integrated)", shape="ellipse", style="filled", color="lightyellow"
+        )
+        dot.node(
+            "M",
+            "MA (Moving Average)",
+            shape="ellipse",
+            style="filled",
+            color="lightgreen",
+        )
+        dot.node("S", "Seasonality", shape="ellipse", style="filled", color="lightpink")
+        dot.node(
+            "X",
+            "Exogenous Variables\n(Traffic Volume)",
+            shape="ellipse",
+            style="filled",
+            color="lightcoral",
+        )
+        dot.node(
+            "SARIMAX", "SARIMAX", shape="ellipse", style="filled", color="lightgrey"
+        )
+
+        # Define the edges (connections)
+        dot.edge("A", "SARIMAX")
+        dot.edge("I", "SARIMAX")
+        dot.edge("M", "SARIMAX")
+        dot.edge("S", "SARIMAX")
+        dot.edge("X", "SARIMAX")
+
+        # Save the diagram to a file
+        dot.render(output_path, format="png", cleanup=True)
+        print(f"Improved diagram saved to {output_path}.png")
+
+    def create_sarimax_data_flow_diagram(output_path: str) -> None:
+        """
+        Creates a data flow diagram illustrating how traffic volume data is used
+        in the SARIMAX model to predict traffic accidents.
+        """
+        # Create a Digraph object
+        dot = Digraph(comment="SARIMAX Data Flow Diagram")
+
+        # Define nodes for the data flow
+        dot.node(
+            "Data", "Traffic Data", shape="box", style="filled", color="lightyellow"
+        )
+        dot.node(
+            "Preprocessing",
+            "Preprocessing",
+            shape="box",
+            style="filled",
+            color="lightblue",
+        )
+        dot.node(
+            "Exogenous",
+            "Exogenous Variables\n(Traffic Volume)",
+            shape="box",
+            style="filled",
+            color="lightcoral",
+        )
+        dot.node(
+            "SARIMAX",
+            "SARIMAX Model",
+            shape="ellipse",
+            style="filled",
+            color="lightgrey",
+        )
+        dot.node(
+            "Forecast",
+            "Predicted Accidents",
+            shape="box",
+            style="filled",
+            color="lightgreen",
+        )
+
+        # Define edges to show data flow
+        dot.edge("Data", "Preprocessing", label="Load & Merge Data")
+        dot.edge("Preprocessing", "Exogenous", label="Extract Exogenous Variables")
+        dot.edge("Preprocessing", "SARIMAX", label="Pass to SARIMAX Model")
+        dot.edge("Exogenous", "SARIMAX", label="Use as Exogenous Variables")
+        dot.edge("SARIMAX", "Forecast", label="Generate Predictions")
+
+        # Save the diagram to a file
+        dot.render(output_path, format="png", cleanup=True)
+        print(f"Data flow diagram saved to {output_path}.png")

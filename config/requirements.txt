@@ -1,8 +1,12 @@
 contextily
 folium
 geopandas
+graphviz
 matplotlib
+numpy
+pmdarima
 pysal
 seaborn
 setuptools
 shapely
+statsmodels

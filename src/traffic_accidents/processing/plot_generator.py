@@ -30,19 +30,11 @@ Example:
 This example will generate bar charts showing the distribution of accident causes for each dataset.
 """
 
-
 import argparse
 import os
 import sys
 
-sys.path.append(
-    os.path.abspath(
-        os.path.join(
-            os.path.dirname(__file__),
-            '../../..'
-        )
-    )
-)
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
 
 from create_shapefile import create_shapefile
 from load_data import load_and_prepare_data
@@ -63,29 +55,29 @@ def main(graph_type: str) -> None:
     base_dir = os.path.abspath(
         os.path.join(
             os.path.dirname(__file__),
-            '../../..',
+            "../../..",
         )
     )
     preprocessed_dir = os.path.join(
         base_dir,
-        'data/traffic_accidents/all_causes_and_types/preprocessed',
+        "data/traffic_accidents/all_causes_and_types/preprocessed",
     )
     shapefile_dir = os.path.join(
         base_dir,
-        'data/traffic_accidents/all_causes_and_types/shapefile',
+        "data/traffic_accidents/all_causes_and_types/shapefile",
     )
-    output_html_dir = os.path.join(base_dir, 'out/html/traffic_accidents')
-    output_img_dir = os.path.join(base_dir, 'out/img/traffic_accidents')
+    output_html_dir = os.path.join(base_dir, "out/html/traffic_accidents")
+    output_img_dir = os.path.join(base_dir, "out/img/traffic_accidents")
 
     datasets = [
-        'acidentes2017_todas_causas_tipos',
-        'acidentes2018_todas_causas_tipos',
-        'acidentes2019_todas_causas_tipos',
-        'acidentes2020_todas_causas_tipos',
-        'acidentes2021_todas_causas_tipos',
-        'acidentes2022_todas_causas_tipos',
-        'acidentes2023_todas_causas_tipos',
-        'acidentes2024_todas_causas_tipos',
+        "acidentes2017_todas_causas_tipos",
+        "acidentes2018_todas_causas_tipos",
+        "acidentes2019_todas_causas_tipos",
+        "acidentes2020_todas_causas_tipos",
+        "acidentes2021_todas_causas_tipos",
+        "acidentes2022_todas_causas_tipos",
+        "acidentes2023_todas_causas_tipos",
+        "acidentes2024_todas_causas_tipos",
     ]
 
     # Ensure the graph type directory exists using the DataPlotter method
@@ -97,11 +89,11 @@ def main(graph_type: str) -> None:
     for dataset_name in datasets:
         preprocessed_file_path = os.path.join(
             preprocessed_dir,
-            f'{dataset_name}_mg.csv',
+            f"{dataset_name}_mg.csv",
         )
         shapefile_output_path = os.path.join(
             shapefile_dir,
-            f'{dataset_name}_mg.shp',
+            f"{dataset_name}_mg.shp",
         )
 
         # Load and prepare data
@@ -111,90 +103,95 @@ def main(graph_type: str) -> None:
         create_shapefile(data, shapefile_output_path)
 
         # Generate the specified plot
-        if graph_type == 'accident_cause_bar':
+        if graph_type == "accident_cause_bar":
             plotter.plot_bar_chart(
-                title=f'Accident Cause Distribution for {dataset_name}',
+                title=f"Accident Cause Distribution for {dataset_name}",
                 data=data,
-                x='count',
-                y='causa_acid',
-                dataset_name=f'{dataset_name}_mg',
-                graph_type='accident_cause/bar',
-                palette='viridis',
-                orient='horizontal',
+                x="count",
+                y="causa_acid",
+                dataset_name=f"{dataset_name}_mg",
+                graph_type="accident_cause/bar",
+                palette="viridis",
+                orient="horizontal",
                 exclude_zero=True,
                 limit=10,
             )
-        elif graph_type == 'accident_cause_pie':
+        elif graph_type == "accident_cause_pie":
             # Prepare the data for the pie chart
-            count_data = data['causa_acid'].value_counts().reset_index()
-            count_data.columns = ['causa_acid', 'count']
+            count_data = data["causa_acid"].value_counts().reset_index()
+            count_data.columns = ["causa_acid", "count"]
 
             plotter.plot_pie_chart(
-                title=f'Accident Cause Distribution for {dataset_name}',
+                title=f"Accident Cause Distribution for {dataset_name}",
                 data=count_data,
-                labels_col='causa_acid',
-                values_col='count',
-                dataset_name=f'{dataset_name}_mg',
-                graph_type='accident_cause/pie',
+                labels_col="causa_acid",
+                values_col="count",
+                dataset_name=f"{dataset_name}_mg",
+                graph_type="accident_cause/pie",
                 legend=True,
                 limit=10,
             )
-        elif graph_type == 'accident_density':
+        elif graph_type == "accident_density":
             plotter.plot_spatial_density(
                 data=data,
-                dataset_name=f'{dataset_name}_mg',
-                graph_type='accident_density',
-                title=f'Spatial Density of Traffic Accidents for {dataset_name}',
-                xlabel='Longitude',
-                ylabel='Latitude',
-                cmap='viridis',
-                scatter_color='blue',
+                dataset_name=f"{dataset_name}_mg",
+                graph_type="accident_density",
+                title=f"Spatial Density of Traffic Accidents for {dataset_name}",
+                xlabel="Longitude",
+                ylabel="Latitude",
+                cmap="viridis",
+                scatter_color="blue",
                 alpha=0.6,
                 add_colorbar=True,
             )
-        elif graph_type == 'static_map':
+        elif graph_type == "static_map":
             plotter.plot_spatial_data(
-                title=f'Static Map for {dataset_name}',
+                title=f"Static Map for {dataset_name}",
                 shapefile_path=shapefile_output_path,
-                dataset_name=f'{dataset_name}_mg',
+                dataset_name=f"{dataset_name}_mg",
             )
-        elif graph_type == 'vehicle_type':
+        elif graph_type == "vehicle_type":
             plotter.plot_count_distribution(
-                title=f'Vehicle Type Distribution for {dataset_name}',
+                title=f"Vehicle Type Distribution for {dataset_name}",
                 data=data,
-                column='tipo_veicu',
-                dataset_name=f'{dataset_name}_mg',
-                graph_type='vehicle_type',
-                palette='viridis',
-                orient='horizontal',
+                column="tipo_veicu",
+                dataset_name=f"{dataset_name}_mg",
+                graph_type="vehicle_type",
+                palette="viridis",
+                orient="horizontal",
                 exclude_zero=True,
                 limit=10,
             )
-        elif graph_type == 'weather_condition':
+        elif graph_type == "weather_condition":
             plotter.plot_count_distribution(
-                title=f'Weather Condition Distribution for {dataset_name}',
+                title=f"Weather Condition Distribution for {dataset_name}",
                 data=data,
-                column='cond_met',
-                dataset_name=f'{dataset_name}_mg',
-                graph_type='weather_condition',
-                palette='viridis',
-                orient='horizontal',
+                column="cond_met",
+                dataset_name=f"{dataset_name}_mg",
+                graph_type="weather_condition",
+                palette="viridis",
+                orient="horizontal",
                 exclude_zero=True,
                 limit=10,
             )
+        elif graph_type == "improved_sarimax_diagram":
+            output_img_dir = "out/sarimax_data_flow_diagram"
+            plotter.create_sarimax_data_flow_diagram(plotter.output_dir)
+        elif graph_type == "sarimax_data_flow_diagram":
+            plotter.create_sarimax_data_flow_diagram(plotter.output_dir)
         else:
             print(f"Unknown graph type: {graph_type}")
 
 
 if __name__ == "__main__":
-    text_description: str = \
-        "Generate specific type of traffic accident analysis graph."
-    text_help: str = \
-        "Type of graph to generate (accident_cause, accident_density, " + \
-        "static_map, vehicle_type, weather_condition)"
+    text_description: str = "Generate specific type of traffic accident analysis graph."
+    text_help: str = (
+        "Type of graph to generate (accident_cause, accident_density, "
+        + "static_map, vehicle_type, weather_condition)"
+    )
 
     parser = argparse.ArgumentParser(description=text_description)
-    parser.add_argument('graph_type', type=str, help=text_help)
+    parser.add_argument("graph_type", type=str, help=text_help)
     args = parser.parse_args()
 
     main(args.graph_type)
