@@ -5,7 +5,6 @@
 # @Info:   Main script to train and forecast using SARIMAX model on traffic data
 # ============================================================================
 
-
 import os
 import sys
 import pandas as pd
@@ -17,32 +16,14 @@ from plot_utils import plot_comparison_chart, export_to_excel
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
 
-def add_month_column(data: pd.DataFrame) -> pd.DataFrame:
+def aggregate_weekly(data: pd.DataFrame) -> pd.DataFrame:
     """
-    Adds a 'month' column to the DataFrame based on the 'data' column.
-    """
-    data["month"] = data["data"].dt.month
-    return data
-
-
-def aggregate_monthly(data: pd.DataFrame) -> pd.DataFrame:
-    """
-    Aggregates data to a monthly basis, ensuring correct calculation of traffic volume as an average.
+    Aggregates data to a weekly basis.
     """
     data["data"] = pd.to_datetime(data["data"])
     data.set_index("data", inplace=True)
-
-    # Aggregate data monthly: sum accidents and average traffic volume
-    monthly_data = (
-        data.groupby(["br", pd.Grouper(freq="M")])
-        .agg({"accidents": "sum", "traffic_volume": "mean"})
-        .reset_index()
-    )
-
-    # Add a month column to the aggregated data
-    monthly_data["month"] = monthly_data["data"].dt.month
-
-    return monthly_data
+    weekly_data = data.groupby(["br", pd.Grouper(freq="W")]).sum().reset_index()
+    return weekly_data
 
 
 def load_data(base_dir: str) -> pd.DataFrame:
@@ -133,7 +114,7 @@ def train_sarimax_model(br_data: pd.DataFrame) -> SARIMAX:
         br_data["accidents"].astype(float),
         exog=exog_data.astype(float),
         order=(1, 1, 1),
-        seasonal_order=(1, 1, 1, 12),  # Ajustado para sazonalidade mensal
+        seasonal_order=(1, 1, 1, 52),
         enforce_stationarity=False,
         enforce_invertibility=False,
     )
@@ -165,30 +146,28 @@ def generate_forecast(
         # Export the forecast results (actual vs predicted) to Excel
         export_forecast_results(br, forecast_data, predicted_accidents, output_img_dir)
 
-        # Generate comparison chart for 2023 (using monthly aggregation)
-        plot_comparison_chart(
-            forecast_data, predicted_accidents, 2023, output_img_dir, freq="M"
-        )
+        # Generate comparison chart for 2023
+        plot_comparison_chart(forecast_data, predicted_accidents, 2023, output_img_dir)
         export_to_excel(forecast_data, predicted_accidents, 2023, output_img_dir)
 
     except ValueError as e:
         print(f"Failed to forecast for BR-{br} in 2023: {e}")
 
 
-def process_br_data(monthly_data: pd.DataFrame, output_img_dir: str) -> None:
+def process_br_data(weekly_data: pd.DataFrame, output_img_dir: str) -> None:
     """
     Process each BR's data, train the SARIMAX model, and generate forecasts.
     """
-    br_list = monthly_data["br"].unique()
+    br_list = weekly_data["br"].unique()
 
     for br in br_list:
         print(f"Training SARIMAX model for BR-{br}...")
-        br_data = monthly_data[monthly_data["br"] == br]
+        br_data = weekly_data[weekly_data["br"] == br]
 
         try:
             # Export training and testing data to Excel before training the model
-            forecast_data = monthly_data[
-                (monthly_data["br"] == br) & (monthly_data["data"].dt.year == 2023)
+            forecast_data = weekly_data[
+                (weekly_data["br"] == br) & (weekly_data["data"].dt.year == 2023)
             ]
             export_training_testing_data(br, br_data, forecast_data, output_img_dir)
 
@@ -216,17 +195,14 @@ def main() -> None:
     merged_data = load_data(base_dir)
 
     print("Data loaded and merged successfully.")
-    print("Adding month column to data...")
-    merged_data = add_month_column(merged_data)
+    print("Aggregating data on a weekly basis...")
 
-    print("Aggregating data on a monthly basis...")
-    monthly_data = aggregate_monthly(merged_data)
-
+    weekly_data = aggregate_weekly(merged_data)
     output_img_dir = os.path.join(base_dir, "traffic-accident-analysis/out/img/core")
 
     print("-" * 50)
     print("Training SARIMAX model on all data...")
-    process_br_data(monthly_data, output_img_dir)
+    process_br_data(weekly_data, output_img_dir)
 
     print("SARIMAX model training and forecasting completed.")
 
