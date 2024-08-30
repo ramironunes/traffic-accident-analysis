@@ -19,19 +19,40 @@ from statsmodels.tsa.statespace.sarimax import SARIMAX
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
 
-def aggregate_weekly(data: pd.DataFrame) -> pd.DataFrame:
+def aggregate_monthly(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Aggregates data to a weekly basis.
+    Aggregates both accident and traffic data to a monthly basis.
+
+    :param data: DataFrame containing the traffic and accident data.
+    :return: DataFrame aggregated on a monthly basis.
     """
-    data["data"] = pd.to_datetime(data["data"])
-    data.set_index("data", inplace=True)
-    weekly_data = data.groupby(["br", pd.Grouper(freq="W")]).sum().reset_index()
-    return weekly_data
+    print("-" * 50)
+    print(df.columns)
+    df.set_index("data", inplace=True)
+    df["accidents"] = pd.to_numeric(df["accidents"], errors="coerce")
+    df["traffic_volume"] = pd.to_numeric(df["traffic_volume"], errors="coerce")
+
+    # Aggregate both accidents and traffic volume on a monthly basis
+    monthly_data = (
+        df.groupby(["br", pd.Grouper(freq="M")])
+        .agg(
+            {
+                "accidents": "sum",  # Sum the accidents for each month
+                "traffic_volume": "mean",  # Take the mean traffic volume for each month
+            }
+        )
+        .reset_index()
+    )
+
+    return monthly_data
 
 
 def load_data(base_dir: str) -> pd.DataFrame:
     """
     Load and preprocess accident and toll data, then merge them.
+
+    :param base_dir: Base directory where the data is stored.
+    :return: Merged DataFrame containing accident and toll data.
     """
     accident_preprocessed_dir = os.path.join(
         base_dir,
@@ -65,16 +86,21 @@ def load_data(base_dir: str) -> pd.DataFrame:
 
 
 def calculate_metrics(
-    real_accidents: np.ndarray, predicted_accidents: np.ndarray
-) -> dict:
+    real_accidents: np.ndarray,
+    predicted_accidents: np.ndarray,
+) -> dict[str, float]:
     """
     Calculate evaluation metrics for model performance.
+
+    :param real_accidents: Array of actual accident numbers.
+    :param predicted_accidents: Array of predicted accident numbers.
+    :return: Dictionary containing MAE, MAPE and RMSE metrics.
     """
     metrics = {
-        "RMSE": np.sqrt(mean_squared_error(real_accidents, predicted_accidents)),
         "MAE": mean_absolute_error(real_accidents, predicted_accidents),
         "MAPE": np.mean(np.abs((real_accidents - predicted_accidents) / real_accidents))
         * 100,
+        "RMSE": np.sqrt(mean_squared_error(real_accidents, predicted_accidents)),
     }
     return metrics
 
@@ -84,6 +110,11 @@ def export_training_testing_data(
 ) -> None:
     """
     Export the training and testing data to an Excel file.
+
+    :param br: The BR identifier.
+    :param br_data: DataFrame containing the BR's training data.
+    :param forecast_data: DataFrame containing the BR's testing data.
+    :param output_dir: Directory where the Excel file will be saved.
     """
     output_path = os.path.join(output_dir, f"BR_{br}_training_testing_data.xlsx")
     with pd.ExcelWriter(output_path) as writer:
@@ -96,10 +127,16 @@ def export_forecast_results(
     forecast_data: pd.DataFrame,
     predicted_accidents: pd.Series,
     output_dir: str,
-    metrics: dict,
+    metrics: dict[str, float],
 ) -> None:
     """
     Export the actual and predicted data, along with evaluation metrics, to an Excel file.
+
+    :param br: The BR identifier.
+    :param forecast_data: DataFrame containing the BR's testing data.
+    :param predicted_accidents: Series of predicted accident numbers.
+    :param output_dir: Directory where the Excel file will be saved.
+    :param metrics: Dictionary containing the evaluation metrics.
     """
     output_path = os.path.join(output_dir, f"BR_{br}_forecast_results_2023.xlsx")
     results_df = forecast_data.copy()
@@ -113,30 +150,30 @@ def export_forecast_results(
         metrics_df.to_excel(writer, sheet_name="Metrics", index=False)
 
 
-def train_sarimax_model(br_data: pd.DataFrame) -> SARIMAX:
+def train_sarimax_model(br_data: pd.DataFrame, config: dict[str, tuple]) -> SARIMAX:
     """
     Train a SARIMAX model on the provided data.
+
+    :param br_data: DataFrame containing the BR's training data.
+    :param config: Dictionary containing the 'order' and 'seasonal_order' configuration.
+    :return: Trained SARIMAX model.
     """
     exog_data = br_data["traffic_volume"]
 
-    # Ensure all data is numeric
-    br_data["accidents"] = pd.to_numeric(br_data["accidents"], errors="coerce")
+    br_data.loc[:, "accidents"] = pd.to_numeric(br_data["accidents"], errors="coerce")
     exog_data = pd.to_numeric(exog_data, errors="coerce")
 
-    # Remove or fill NaNs if needed
-    br_data.dropna(subset=["accidents"], inplace=True)
+    br_data = br_data.loc[br_data["accidents"].notna()]
     exog_data.fillna(0, inplace=True)
 
-    # Ensure that the dataset has enough observations
     if len(br_data) < 3:
         raise ValueError("Not enough data to train SARIMAX model.")
 
-    # Train the SARIMAX model
     sarimax_model = SARIMAX(
         br_data["accidents"].astype(float),
         exog=exog_data.astype(float),
-        order=(1, 1, 1),
-        seasonal_order=(1, 1, 1, 52),
+        order=config["order"],
+        seasonal_order=config["seasonal_order"],
         enforce_stationarity=False,
         enforce_invertibility=False,
     )
@@ -148,6 +185,11 @@ def generate_forecast(
 ) -> None:
     """
     Generate and save the forecast for the specified BR and year 2023.
+
+    :param br: The BR identifier.
+    :param sarimax_result: Trained SARIMAX model result.
+    :param forecast_data: DataFrame containing the BR's testing data.
+    :param output_img_dir: Directory where the output images will be saved.
     """
     exog_forecast = pd.to_numeric(forecast_data["traffic_volume"], errors="coerce")
     exog_forecast.fillna(0, inplace=True)
@@ -158,23 +200,18 @@ def generate_forecast(
         )
         predicted_accidents = predictions.predicted_mean
 
-        # Ensure that both arrays have the same length
         min_length = min(
             len(forecast_data["accidents"].values), len(predicted_accidents)
         )
         real_accidents = forecast_data["accidents"].values[:min_length]
         predicted_accidents = predicted_accidents[:min_length]
 
-        # Calculate evaluation metrics
         metrics = calculate_metrics(real_accidents, predicted_accidents)
         print(f"Evaluation Metrics for BR-{br}: {metrics}")
 
-        # Export the forecast results (actual vs predicted) to Excel
         export_forecast_results(
             br, forecast_data, predicted_accidents, output_img_dir, metrics
         )
-
-        # Generate comparison chart for 2023
         plot_comparison_chart(forecast_data, predicted_accidents, 2023, output_img_dir)
         export_to_excel(forecast_data, predicted_accidents, 2023, output_img_dir)
 
@@ -183,10 +220,18 @@ def generate_forecast(
 
 
 def perform_rolling_window_validation(
-    data: pd.DataFrame, initial_train_size: int, window_size: int
+    data: pd.DataFrame,
+    initial_train_size: int,
+    window_size: int,
+    config: dict[str, tuple],
 ):
     """
     Perform rolling window validation on SARIMAX model.
+
+    :param data: DataFrame containing the time series data.
+    :param initial_train_size: Initial size of the training dataset.
+    :param window_size: Size of the validation window.
+    :param config: Dictionary containing the 'order' and 'seasonal_order' configuration.
     """
     n_splits = (len(data) - initial_train_size) // window_size
 
@@ -197,61 +242,146 @@ def perform_rolling_window_validation(
             + (i + 1) * window_size
         ]
 
+        print("-" * 50)
         print(f"Training on window {i+1}/{n_splits}...")
 
         try:
-            sarimax_result = train_sarimax_model(train_data)
+            sarimax_result = train_sarimax_model(train_data, config)
             predictions = sarimax_result.get_forecast(
                 steps=len(test_data), exog=test_data["traffic_volume"]
             )
             predicted_accidents = predictions.predicted_mean
 
-            # Calculate metrics
             metrics = calculate_metrics(
                 test_data["accidents"].values, predicted_accidents.values
             )
             print(f"Metrics for window {i+1}: {metrics}")
 
-            # Optionally, export or store these metrics for analysis
-
         except ValueError as e:
             print(f"Failed to train SARIMAX model on window {i+1}: {e}")
 
 
-def process_br_data(weekly_data: pd.DataFrame, output_img_dir: str) -> None:
+def filter_by_km_range(
+    data: pd.DataFrame, km_start: float, km_end: float
+) -> pd.DataFrame:
+    """
+    Filter the data to include only records within the specified kilometer range.
+
+    :param data: DataFrame containing the traffic or accident data.
+    :param km_start: Start of the kilometer range.
+    :param km_end: End of the kilometer range.
+    :return: Filtered DataFrame within the specified kilometer range.
+    """
+    if "km" not in data.columns:
+        raise KeyError("The 'km' column is missing from the data.")
+
+    return data[(data["km"] >= km_start) & (data["km"] <= km_end)]
+
+
+def train_multiple_sarimax_models(
+    br_data: pd.DataFrame,
+    config_list: list[dict[str, tuple]],
+) -> list[SARIMAX]:
+    """
+    Train SARIMAX models using different configurations and return the results.
+
+    :param br_data: DataFrame containing the BR's training data.
+    :param config_list: List of configurations to train the model with.
+    :return: List of trained SARIMAX model results.
+    """
+    results = []
+    for config in config_list:
+        try:
+            result = train_sarimax_model(br_data, config)
+            results.append(result)
+        except ValueError as e:
+            print(f"Failed to train SARIMAX model with config {config}: {e}")
+            continue
+    return results
+
+
+def process_br_data(
+    monthly_data: pd.DataFrame,
+    output_img_dir: str,
+    config_list: list[dict[str, tuple]],
+) -> None:
     """
     Process each BR's data, train the SARIMAX model, and generate forecasts.
+
+    :param monthly_data: DataFrame containing the monthly traffic data.
+    :param output_img_dir: Directory where the output images will be saved.
+    :param config_list: List of configurations to train the model with.
     """
-    br_list = weekly_data["br"].unique()
+    br_list = monthly_data["br"].unique()
 
     for br in br_list:
-        print(f"Training SARIMAX model for BR-{br}...")
-        br_data = weekly_data[weekly_data["br"] == br]
+        print("-" * 50)
+        print(f"Processing BR-{br}...")
+        br_data = monthly_data[monthly_data["br"] == br]
+        print(f"Number of records for BR-{br}: {len(br_data)}")
+
+        if len(br_data) < 3:
+            print(f"Skipping BR-{br} due to insufficient data.")
+            continue
 
         try:
-            # Export training and testing data to Excel before training the model
-            forecast_data = weekly_data[
-                (weekly_data["br"] == br) & (weekly_data["data"].dt.year == 2023)
+            br_data_filtered = filter_by_km_range(br_data, 100.0, 115.0)
+            forecast_data = monthly_data[
+                (monthly_data["br"] == br) & (monthly_data["data"].dt.year == 2023)
             ]
-            export_training_testing_data(br, br_data, forecast_data, output_img_dir)
+            export_training_testing_data(
+                br, br_data_filtered, forecast_data, output_img_dir
+            )
 
-            sarimax_result = train_sarimax_model(br_data)
-            print(f"Model training completed for BR-{br}.")
-            print("-" * 50)
+            for config in config_list:
+                sarimax_result = train_sarimax_model(br_data_filtered, config)
+                print(f"Model training completed for BR-{br} with config {config}.")
+                print("-" * 50)
 
-            # Generate predictions for the year 2023
-            if len(forecast_data) == 0:
-                print(f"No data available to forecast for BR-{br} in 2023. Skipping...")
-                continue
+                if len(forecast_data) == 0:
+                    print(
+                        f"No data available to forecast for BR-{br} in 2023. Skipping..."
+                    )
+                    continue
 
-            generate_forecast(br, sarimax_result, forecast_data, output_img_dir)
+                generate_forecast(br, sarimax_result, forecast_data, output_img_dir)
 
         except ValueError as e:
             print(f"Failed to train SARIMAX model for BR-{br}: {e}")
             continue
 
 
+def get_sarimax_configs():
+    """
+    Parameters:
+    order (tuple[int, int, int]): A tuple representing the non-seasonal components (p, d, q).
+        - p (int): Number of autoregressive terms. This determines the lagged values
+          used as input to the model.
+        - d (int): Number of non-seasonal differences required to make the series stationary.
+          A higher value indicates more differencing to remove trends.
+        - q (int): Number of moving average terms. This models the relationship between
+          the observed values and the previous forecast errors.
+
+    seasonal_order (tuple[int, int, int, int]): A tuple representing the seasonal components (P, D, Q, m).
+        - P (int): Number of seasonal autoregressive terms. Similar to p but applied to the
+          seasonal component of the series.
+        - D (int): Number of seasonal differences. Similar to d but applied to the seasonal
+          component of the series.
+        - Q (int): Number of seasonal moving average terms. Similar to q but applied to the
+          seasonal component of the series.
+        - m (int): Number of periods in each season. This defines the length of the seasonal cycle,
+          e.g., 12 for monthly data with annual seasonality.
+    """
+    return [
+        {"order": (1, 1, 1), "seasonal_order": (1, 1, 1, 52)},
+        {"order": (2, 1, 2), "seasonal_order": (2, 1, 2, 52)},
+    ]
+
+
 def main() -> None:
+    """
+    Main function to load data, train SARIMAX models, and generate forecasts.
+    """
     print("-" * 50)
     print("Loading preprocessed data...")
 
@@ -259,14 +389,20 @@ def main() -> None:
     merged_data = load_data(base_dir)
 
     print("Data loaded and merged successfully.")
-    print("Aggregating data on a weekly basis...")
+    print("Aggregating data on a monthly basis...")
 
-    weekly_data = aggregate_weekly(merged_data)
+    monthly_data = aggregate_monthly(merged_data)
     output_img_dir = os.path.join(base_dir, "traffic-accident-analysis/out/img/core")
 
     print("-" * 50)
     print("Training SARIMAX model on all data...")
-    process_br_data(weekly_data, output_img_dir)
+    sarimax_configs = get_sarimax_configs()
+
+    process_br_data(
+        monthly_data,
+        output_img_dir,
+        sarimax_configs,
+    )
 
     print("SARIMAX model training and forecasting completed.")
 
