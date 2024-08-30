@@ -2,7 +2,7 @@
 # @Author: Jean Mira
 # @Date:   2024-08-09 20:08:10
 # @Last Modified by:   Ramiro Luiz Nunes
-# @Last Modified time: 2024-08-10 21:46:57
+# @Last Modified time: 2024-08-29 22:39:55
 
 
 import pandas as pd
@@ -53,17 +53,26 @@ def preprocess_toll_data(input_file_path: str, output_file_path: str) -> None:
     :return: None
     """
     try:
-        data = pd.read_csv(input_file_path, encoding="latin1", delimiter=";")
+        df = pd.read_csv(input_file_path, encoding="latin1", delimiter=";")
+
+        # Normalize column names to lowercase
+        df.columns = df.columns.str.lower()
 
         # Remove accents from columns and 'praca' field
-        data.columns = [unidecode.unidecode(col) for col in data.columns]
-        data["praca"] = data["praca"].apply(unidecode.unidecode)
+        df.columns = [unidecode.unidecode(col) for col in df.columns]
+        df["praca"] = df["praca"].apply(unidecode.unidecode)
 
         # Rename 'mes_ano' column to 'data'
-        data.rename(columns={"mes_ano": "data"}, inplace=True)
+        df.rename(columns={"mes_ano": "data"}, inplace=True)
+
+        # Convert 'data' columns to datetime
+        df["data"] = pd.to_datetime(df["data"], format="%d/%m/%Y")
+
+        # Create 'year_month' column for monthly aggregation
+        df["year_month"] = df["data"].dt.to_period("M")
 
         # Filter for Minas Gerais toll stations
-        data_mg = data[data["praca"].str.contains("MG")]
+        data_mg = df[df["praca"].str.contains("MG")]
 
         # Extract BR and KM and add them as new columns
         data_mg[["br", "km"]] = data_mg["praca"].apply(
@@ -72,6 +81,9 @@ def preprocess_toll_data(input_file_path: str, output_file_path: str) -> None:
 
         # Convert 'km' to float
         data_mg["km"] = data_mg["km"].astype(float)
+
+        # Convert the 'data' column back to string with the desired format
+        data_mg["data"] = data_mg["data"].dt.strftime("%d/%m/%Y")
 
         # Save the preprocessed data with only numeric BR and KM
         data_mg.to_csv(output_file_path, index=False, encoding="utf-8", sep=",")

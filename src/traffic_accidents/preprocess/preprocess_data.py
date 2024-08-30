@@ -16,20 +16,22 @@ def load_data(input_file_path: str) -> pd.DataFrame:
     :param input_file_path: Path to the input CSV file.
     :return: Loaded DataFrame.
     """
-    return pd.read_csv(input_file_path, encoding="latin1", delimiter=";")
+    df = pd.read_csv(input_file_path, encoding="latin1", delimiter=";")
+    df.columns = df.columns.str.lower()
+    return df
 
 
-def filter_mg_records(data: pd.DataFrame) -> pd.DataFrame:
+def filter_mg_records(df: pd.DataFrame) -> pd.DataFrame:
     """
     Filter the data to include only records that occurred in Minas Gerais (MG).
 
     :param data: DataFrame containing the dataset data.
     :return: Filtered DataFrame with only MG records.
     """
-    return data[data["uf"] == "MG"]
+    return df[df["uf"] == "MG"]
 
 
-def remove_invalid_rows(data: pd.DataFrame) -> pd.DataFrame:
+def remove_invalid_rows(df: pd.DataFrame) -> pd.DataFrame:
     """
     Remove rows that do not contain valid 'br' and 'km' columns.
 
@@ -37,50 +39,57 @@ def remove_invalid_rows(data: pd.DataFrame) -> pd.DataFrame:
     :return: DataFrame with rows containing valid 'br' and 'km' columns.
     """
     # Ensure the columns 'br' and 'km' exist, if not, create them with NaN values
-    if "br" not in data.columns:
-        data["br"] = pd.NA
-    if "km" not in data.columns:
-        data["km"] = pd.NA
+    if "br" not in df.columns:
+        df["br"] = pd.NA
+    if "km" not in df.columns:
+        df["km"] = pd.NA
 
     # Convert 'br' to integer, handling errors
-    data["br"] = pd.to_numeric(data["br"], errors="coerce").astype("Int64")
+    df["br"] = pd.to_numeric(df["br"], errors="coerce").astype("Int64")
 
     # Convert 'km' to float, handle errors, and remove NaNs
-    data["km"] = pd.to_numeric(
-        data["km"].astype(str).str.replace(",", "."), errors="coerce"
+    df["km"] = pd.to_numeric(
+        df["km"].astype(str).str.replace(",", "."), errors="coerce"
     )
 
     # Remove rows where 'br' or 'km' is NaN or empty
-    data_cleaned = data.dropna(subset=["br", "km"])
+    data_cleaned = df.dropna(subset=["br", "km"])
 
     return data_cleaned
 
 
-def remove_duplicate_ids(data: pd.DataFrame) -> pd.DataFrame:
+def remove_duplicate_ids(df: pd.DataFrame) -> pd.DataFrame:
     """
     Remove duplicate rows based on the 'id' column, keeping only the first occurrence.
 
     :param data: DataFrame containing the dataset data.
     :return: DataFrame with unique 'id' values.
     """
-    return data.drop_duplicates(subset=["id"])
+    return df.drop_duplicates(subset=["id"])
 
 
-def format_date_column(data: pd.DataFrame) -> pd.DataFrame:
+def format_date_column(df: pd.DataFrame) -> pd.DataFrame:
     """
     Rename the 'data_inversa' column to 'data' and format it to 'dd-mm-yyyy'.
 
     :param data: DataFrame containing the dataset data.
     :return: DataFrame with the 'data' column formatted.
     """
-    data.rename(columns={"data_inversa": "data"}, inplace=True)
-    data["data"] = pd.to_datetime(data["data"], format="%Y-%m-%d").dt.strftime(
-        "%d/%m/%Y"
-    )
-    return data
+    df.rename(columns={"data_inversa": "data"}, inplace=True)
+
+    # Convert 'data' column to datetime
+    df["data"] = pd.to_datetime(df["data"], format="%Y-%m-%d")
+
+    # Create 'year_month' before formatting 'data' as a string
+    df["year_month"] = df["data"].dt.to_period("M")
+
+    # Format the 'data' column to 'dd/mm/yyyy' as string
+    df["data"] = df["data"].dt.strftime("%d/%m/%Y")
+
+    return df
 
 
-def save_data(data: pd.DataFrame, output_file_path: str) -> None:
+def save_data(df: pd.DataFrame, output_file_path: str) -> None:
     """
     Save the processed data to the output CSV file.
 
@@ -88,7 +97,7 @@ def save_data(data: pd.DataFrame, output_file_path: str) -> None:
     :param output_file_path: Path to save the preprocessed CSV file.
     :return: None
     """
-    data.to_csv(output_file_path, index=False, encoding="latin1", sep=";")
+    df.to_csv(output_file_path, index=False, encoding="latin1", sep=";")
     print(f"Data processed and saved successfully to {output_file_path}")
 
 
