@@ -28,7 +28,7 @@ def aggregate_monthly(df: pd.DataFrame) -> pd.DataFrame:
     """
     print("-" * 50)
     print(df.columns)
-    df.set_index("data", inplace=True)
+    df.set_index("year_month", inplace=True)
     df["accidents"] = pd.to_numeric(df["accidents"], errors="coerce")
     df["traffic_volume"] = pd.to_numeric(df["traffic_volume"], errors="coerce")
 
@@ -391,20 +391,20 @@ def main() -> None:
     print("Data loaded and merged successfully.")
     print("Aggregating data on a monthly basis...")
 
-    monthly_data = aggregate_monthly(merged_data)
-    output_img_dir = os.path.join(base_dir, "traffic-accident-analysis/out/img/core")
+    # monthly_data = aggregate_monthly(merged_data)
+    # output_img_dir = os.path.join(base_dir, "traffic-accident-analysis/out/img/core")
 
-    print("-" * 50)
-    print("Training SARIMAX model on all data...")
-    sarimax_configs = get_sarimax_configs()
+    # print("-" * 50)
+    # print("Training SARIMAX model on all data...")
+    # sarimax_configs = get_sarimax_configs()
 
-    process_br_data(
-        monthly_data,
-        output_img_dir,
-        sarimax_configs,
-    )
+    # process_br_data(
+    #     monthly_data,
+    #     output_img_dir,
+    #     sarimax_configs,
+    # )
 
-    print("SARIMAX model training and forecasting completed.")
+    # print("SARIMAX model training and forecasting completed.")
 
 
 if __name__ == "__main__":
