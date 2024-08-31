@@ -14,40 +14,43 @@ from sklearn.metrics import mean_absolute_percentage_error, mean_squared_error
 
 
 def plot_comparison_chart(
-    forecast_data: pd.DataFrame, predictions: pd.Series, year: int, output_img_dir: str
+    forecast_data: pd.DataFrame,
+    predicted_accidents: pd.Series,
+    year: int,
+    output_img_dir: str,
 ) -> None:
     """
-    Plot a comparison chart between the actual and forecasted data for a specific year.
+    Plot and save a comparison chart of actual vs predicted accidents.
 
-    Args:
-        forecast_data (pd.DataFrame): DataFrame containing the actual data.
-        predictions (pd.Series): Series containing the forecasted data.
-        year (int): The year for which the comparison is being made.
-        output_img_dir (str): The directory to save the output image.
+    :param forecast_data: DataFrame containing the BR's testing data.
+    :param predicted_accidents: Series of predicted accident numbers.
+    :param year: The year for which the forecast was made.
+    :param output_img_dir: Directory where the output image will be saved.
     """
-    plt.figure(figsize=(12, 8))
+    plt.figure(figsize=(10, 6))
+    plt.plot(forecast_data["year_month"], forecast_data["accidents"], label="Actual")
     plt.plot(
-        forecast_data["data"],
-        forecast_data["accidents"],
-        label="Acidentes Reais",
-        marker="o",
+        forecast_data["year_month"],
+        predicted_accidents,
+        label="Predicted",
+        linestyle="--",
     )
-    plt.plot(forecast_data["data"], predictions, label="Previsão SARIMA", marker="x")
-    plt.title(f"Comparação entre Acidentes Reais e Previstos - {year}", fontsize=16)
-    plt.xlabel("Mês", fontsize=14)
-    plt.ylabel("Número de Acidentes", fontsize=14)
-    plt.xticks(
-        forecast_data["data"], forecast_data["data"].dt.strftime("%b"), rotation=45
-    )
+    plt.title(f"Actual vs Predicted Accidents for {year}")
+    plt.xlabel("Month")
+    plt.ylabel("Number of Accidents")
     plt.legend()
     plt.grid(True)
-    plt.tight_layout()
-    plt.savefig(os.path.join(output_img_dir, f"sarima_comparison_{year}.png"), dpi=100)
+
+    output_path = os.path.join(output_img_dir, f"BR_forecast_comparison_{year}.png")
+    plt.savefig(output_path)
     plt.close()
 
 
 def export_to_excel(
-    forecast_data: pd.DataFrame, predictions: pd.Series, year: int, output_dir: str
+    forecast_data: pd.DataFrame,
+    predictions: pd.Series,
+    year: int,
+    output_dir: str,
 ) -> None:
     """
     Export the actual and forecasted data along with performance metrics to an Excel file.

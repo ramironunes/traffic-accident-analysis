@@ -24,9 +24,13 @@ def main() -> None:
     """
     base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
 
-    raw_dir = os.path.join(base_dir, "data/traffic_accidents/all_causes_and_types/raw")
+    raw_dir = os.path.join(
+        base_dir,
+        "data/traffic_accidents/all_causes_and_types/raw",
+    )
     preprocessed_dir = os.path.join(
-        base_dir, "data/traffic_accidents/all_causes_and_types/preprocessed"
+        base_dir,
+        "data/traffic_accidents/all_causes_and_types/preprocessed",
     )
 
     datasets = [

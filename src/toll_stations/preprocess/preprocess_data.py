@@ -2,7 +2,7 @@
 # @Author: Jean Mira
 # @Date:   2024-08-09 20:08:10
 # @Last Modified by:   Ramiro Luiz Nunes
-# @Last Modified time: 2024-08-29 22:39:55
+# @Last Modified time: 2024-08-31 00:32:33
 
 
 import pandas as pd
@@ -81,6 +81,15 @@ def preprocess_toll_data(input_file_path: str, output_file_path: str) -> None:
 
         # Convert 'km' to float
         data_mg["km"] = data_mg["km"].astype(float)
+
+        # Normalize 'volume_total' by calculating the monthly mean and applying it
+        if "volume_total" in data_mg.columns:
+            data_mg["volume_total"] = (
+                data_mg.groupby("year_month")["volume_total"]
+                .transform("mean")
+                .round()
+                .astype(int)
+            )
 
         # Convert the 'data' column back to string with the desired format
         data_mg["data"] = data_mg["data"].dt.strftime("%d/%m/%Y")

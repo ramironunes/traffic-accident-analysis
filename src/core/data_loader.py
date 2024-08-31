@@ -54,23 +54,32 @@ def load_preprocessed_data(
         .reset_index()
     )
 
-    merged_data = merge_datasets_on_km_range(
+    preprocessed_data = merge_datasets_on_km_range(
         accident_data_grouped,
         process_toll_data(toll_data),
     )
 
     # Save the processed data to a CSV file
-    base_dir = os.path.abspath(os.path.dirname(__file__))
-    output_file_path = os.path.join(base_dir, "merged_data.csv")
-    merged_data.to_csv(output_file_path, index=False, encoding="utf-8")
+    base_dir = os.path.abspath(
+        os.path.join(
+            os.path.dirname(__file__),
+            "../../..",
+        )
+    )
+    output_dir = os.path.join(
+        base_dir,
+        "traffic-accident-analysis/out/data",
+    )
+    output_file_path = os.path.join(output_dir, "preprocessed_data.csv")
+    preprocessed_data.to_csv(output_file_path, index=False, encoding="utf-8")
 
     # Renaming columns for clarity
-    merged_data.rename(
+    preprocessed_data.rename(
         columns={"id": "accidents", "volume_total": "traffic_volume"},
         inplace=True,
     )
 
-    return merged_data
+    return preprocessed_data
 
 
 def merge_datasets_on_km_range(
