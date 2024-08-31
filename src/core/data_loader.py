@@ -47,39 +47,71 @@ def load_preprocessed_data(
         ignore_index=True,
     )
 
-    processed_toll_data = process_toll_data(toll_data)
-
-    # Save the processed data to a CSV file
-    base_dir = os.path.abspath(os.path.dirname(__file__))
-    output_file_path = os.path.join(base_dir, "processed_toll_data.csv")
-    processed_toll_data.to_csv(output_file_path, index=False, encoding="utf-8")
-
-    # Confirm that the data was saved
-    print(f"Processed toll data saved to {output_file_path}")
-
     # Monthly aggregation of accident data and traffic volume
     accident_data_grouped = (
         accident_data.groupby(["br", "km", "year_month"])
         .agg({"id": "count"})  # Counting the number of accidents per month
         .reset_index()
     )
-    toll_data_grouped = (
-        toll_data.groupby(["br", "km", "year_month"])
-        .agg({"volume_total": "sum"})  # Summing the traffic volume per month
-        .reset_index()
+
+    merged_data = merge_datasets_on_km_range(
+        accident_data_grouped,
+        process_toll_data(toll_data),
     )
 
-    # Merging the monthly aggregated data
-    merged_data = pd.merge(
-        accident_data_grouped,
-        toll_data_grouped,
-        on=["br", "km", "year_month"],
-        how="inner",
-    )
+    # Save the processed data to a CSV file
+    base_dir = os.path.abspath(os.path.dirname(__file__))
+    output_file_path = os.path.join(base_dir, "merged_data.csv")
+    merged_data.to_csv(output_file_path, index=False, encoding="utf-8")
 
     # Renaming columns for clarity
     merged_data.rename(
         columns={"id": "accidents", "volume_total": "traffic_volume"},
+        inplace=True,
+    )
+
+    return merged_data
+
+
+def merge_datasets_on_km_range(
+    accident_data: pd.DataFrame,
+    toll_data: pd.DataFrame,
+) -> pd.DataFrame:
+    """
+    Merge accident data with toll data based on km range.
+
+    :param accident_data: DataFrame containing accident data.
+    :param toll_data: DataFrame containing toll data with distance_to_prev and distance_to_next.
+    :return: Merged DataFrame with accidents matched to toll stations based on km range.
+    """
+    # Expand the toll_data to account for the km range
+    toll_data_expanded = toll_data.copy()
+    toll_data_expanded["km_start"] = (
+        toll_data_expanded["km"] - toll_data_expanded["distance_to_prev"]
+    )
+    toll_data_expanded["km_end"] = (
+        toll_data_expanded["km"] + toll_data_expanded["distance_to_next"]
+    )
+
+    # Perform the merge based on the km range
+    merged_data = pd.merge(
+        accident_data,
+        toll_data_expanded,
+        how="inner",
+        left_on=["br", "year_month"],
+        right_on=["br", "year_month"],
+    )
+
+    # Filter rows where the accident km falls within the toll km range
+    merged_data = merged_data[
+        (merged_data["km_x"] >= merged_data["km_start"])
+        & (merged_data["km_x"] <= merged_data["km_end"])
+    ]
+
+    # Drop auxiliary columns and rename as needed
+    merged_data.drop(columns=["km_start", "km_end"], inplace=True)
+    merged_data.rename(
+        columns={"km_x": "accident_km", "km_y": "toll_km"},
         inplace=True,
     )
 
@@ -106,8 +138,9 @@ def process_toll_data(toll_data: pd.DataFrame) -> pd.DataFrame:
         if len(group) > 1:
             next_km = group["next_km"].iloc[-1]
             prev_km = group["prev_km"].iloc[0]
-            group["next_km"] = next_km  # Replicate the next_km value for all rows
-            group["prev_km"] = prev_km  # Replicate the prev_km value for all rows
+            group["next_km"] = next_km
+            group["prev_km"] = prev_km
+
         return group
 
     toll_data = toll_data.groupby(["br", "km"]).apply(adjust_km)
@@ -120,10 +153,11 @@ def process_toll_data(toll_data: pd.DataFrame) -> pd.DataFrame:
     toll_data = toll_data.reset_index(drop=True)
 
     # Calculate the distances to the next and previous toll stations
-    toll_data["distance_to_next"] = toll_data["next_km"] - toll_data["km"]
-    toll_data["distance_to_prev"] = toll_data["km"] - toll_data["prev_km"]
+    toll_data["distance_to_next"] = (toll_data["next_km"] - toll_data["km"]) / 2
+    toll_data["distance_to_prev"] = (toll_data["km"] - toll_data["prev_km"]) / 2
 
-    # Adjust all distance_to_prev for the first km and distance_to_next for the last km in each 'br' group
+    # Adjust all distance_to_prev for the first km and distance_to_next for
+    # the last km in each 'br' group
     first_km_indices = (
         toll_data.groupby("br")
         .apply(lambda x: x[x["km"] == x["km"].min()].index)

@@ -6,10 +6,10 @@
 # ============================================================================
 
 
-import os
-import sys
 import pandas as pd
 import numpy as np
+import os
+import sys
 
 from data_loader import get_file_paths, load_preprocessed_data
 from plot_utils import plot_comparison_chart, export_to_excel
@@ -17,34 +17,6 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
-
-
-def aggregate_monthly(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Aggregates both accident and traffic data to a monthly basis.
-
-    :param data: DataFrame containing the traffic and accident data.
-    :return: DataFrame aggregated on a monthly basis.
-    """
-    print("-" * 50)
-    print(df.columns)
-    df.set_index("year_month", inplace=True)
-    df["accidents"] = pd.to_numeric(df["accidents"], errors="coerce")
-    df["traffic_volume"] = pd.to_numeric(df["traffic_volume"], errors="coerce")
-
-    # Aggregate both accidents and traffic volume on a monthly basis
-    monthly_data = (
-        df.groupby(["br", pd.Grouper(freq="M")])
-        .agg(
-            {
-                "accidents": "sum",  # Sum the accidents for each month
-                "traffic_volume": "mean",  # Take the mean traffic volume for each month
-            }
-        )
-        .reset_index()
-    )
-
-    return monthly_data
 
 
 def load_data(base_dir: str) -> pd.DataFrame:
@@ -106,7 +78,10 @@ def calculate_metrics(
 
 
 def export_training_testing_data(
-    br: str, br_data: pd.DataFrame, forecast_data: pd.DataFrame, output_dir: str
+    br: str,
+    br_data: pd.DataFrame,
+    forecast_data: pd.DataFrame,
+    output_dir: str,
 ) -> None:
     """
     Export the training and testing data to an Excel file.
@@ -150,7 +125,10 @@ def export_forecast_results(
         metrics_df.to_excel(writer, sheet_name="Metrics", index=False)
 
 
-def train_sarimax_model(br_data: pd.DataFrame, config: dict[str, tuple]) -> SARIMAX:
+def train_sarimax_model(
+    br_data: pd.DataFrame,
+    config: dict[str, tuple],
+) -> SARIMAX:
     """
     Train a SARIMAX model on the provided data.
 
@@ -181,7 +159,10 @@ def train_sarimax_model(br_data: pd.DataFrame, config: dict[str, tuple]) -> SARI
 
 
 def generate_forecast(
-    br: str, sarimax_result: SARIMAX, forecast_data: pd.DataFrame, output_img_dir: str
+    br: str,
+    sarimax_result: SARIMAX,
+    forecast_data: pd.DataFrame,
+    output_img_dir: str,
 ) -> None:
     """
     Generate and save the forecast for the specified BR and year 2023.
@@ -262,7 +243,9 @@ def perform_rolling_window_validation(
 
 
 def filter_by_km_range(
-    data: pd.DataFrame, km_start: float, km_end: float
+    data: pd.DataFrame,
+    km_start: float,
+    km_end: float,
 ) -> pd.DataFrame:
     """
     Filter the data to include only records within the specified kilometer range.
@@ -301,7 +284,7 @@ def train_multiple_sarimax_models(
 
 
 def process_br_data(
-    monthly_data: pd.DataFrame,
+    merged_data: pd.DataFrame,
     output_img_dir: str,
     config_list: list[dict[str, tuple]],
 ) -> None:
@@ -312,12 +295,12 @@ def process_br_data(
     :param output_img_dir: Directory where the output images will be saved.
     :param config_list: List of configurations to train the model with.
     """
-    br_list = monthly_data["br"].unique()
+    br_list = merged_data["br"].unique()
 
     for br in br_list:
         print("-" * 50)
         print(f"Processing BR-{br}...")
-        br_data = monthly_data[monthly_data["br"] == br]
+        br_data = merged_data[merged_data["br"] == br]
         print(f"Number of records for BR-{br}: {len(br_data)}")
 
         if len(br_data) < 3:
@@ -326,11 +309,14 @@ def process_br_data(
 
         try:
             br_data_filtered = filter_by_km_range(br_data, 100.0, 115.0)
-            forecast_data = monthly_data[
-                (monthly_data["br"] == br) & (monthly_data["data"].dt.year == 2023)
+            forecast_data = merged_data[
+                (merged_data["br"] == br) & (merged_data["data"].dt.year == 2023)
             ]
             export_training_testing_data(
-                br, br_data_filtered, forecast_data, output_img_dir
+                br,
+                br_data_filtered,
+                forecast_data,
+                output_img_dir,
             )
 
             for config in config_list:
@@ -388,10 +374,6 @@ def main() -> None:
     base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
     merged_data = load_data(base_dir)
 
-    print("Data loaded and merged successfully.")
-    print("Aggregating data on a monthly basis...")
-
-    # monthly_data = aggregate_monthly(merged_data)
     # output_img_dir = os.path.join(base_dir, "traffic-accident-analysis/out/img/core")
 
     # print("-" * 50)
@@ -399,7 +381,7 @@ def main() -> None:
     # sarimax_configs = get_sarimax_configs()
 
     # process_br_data(
-    #     monthly_data,
+    #     merged_data,
     #     output_img_dir,
     #     sarimax_configs,
     # )
