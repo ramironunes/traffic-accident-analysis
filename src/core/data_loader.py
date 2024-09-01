@@ -159,6 +159,8 @@ def process_toll_data(toll_data: pd.DataFrame) -> pd.DataFrame:
         }
     )
 
+    toll_data = toll_data[toll_data["volume_total"] != 0]
+
     # Sort toll stations by 'br' and 'km'
     toll_data = toll_data.sort_values(by=["br", "km"]).reset_index(drop=True)
 

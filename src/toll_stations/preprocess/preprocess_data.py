@@ -74,8 +74,8 @@ def preprocess_toll_data(input_file_path: str, output_file_path: str) -> None:
         # Filter for Minas Gerais toll stations
         data_mg = df[df["praca"].str.contains("MG")]
 
-        # Further filtering for specific conditions
-        data_mg = data_mg[data_mg["tipo_de_veiculo"] == "Passeio"]
+        # # Further filtering for specific conditions
+        # data_mg = data_mg[data_mg["tipo_de_veiculo"] == "Passeio"]
 
         # Ensure 'volume_total' is numeric and handle non-numeric values
         data_mg["volume_total"] = pd.to_numeric(
@@ -85,7 +85,7 @@ def preprocess_toll_data(input_file_path: str, output_file_path: str) -> None:
         # Group by 'year_month' and 'praca' to calculate the mean volume_total for 'Passeio'
         data_mg = (
             data_mg.groupby(["year_month", "praca"], as_index=False)
-            .agg({"volume_total": "mean"})
+            .agg({"volume_total": "sum"})
             .round()
             .astype(int)
         )
