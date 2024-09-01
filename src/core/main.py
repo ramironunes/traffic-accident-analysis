@@ -127,6 +127,7 @@ def export_training_testing_data(
 
 def export_forecast_results(
     br: str,
+    year: int,
     forecast_data: pd.DataFrame,
     predicted_accidents: pd.Series,
     output_dir: str,
@@ -141,7 +142,7 @@ def export_forecast_results(
     :param output_dir: Directory where the Excel file will be saved.
     :param metrics: Dictionary containing the evaluation metrics.
     """
-    output_path = os.path.join(output_dir, f"BR_{br}_forecast_results_2023.xlsx")
+    output_path = os.path.join(output_dir, f"BR_{br}_forecast_results_{year}.xlsx")
     results_df = forecast_data.copy()
     results_df["Predicted Accidents"] = predicted_accidents
     results_df["Error"] = results_df["accidents"] - results_df["Predicted Accidents"]
@@ -188,6 +189,7 @@ def train_sarimax_model(
 
 def generate_forecast(
     br: str,
+    year: int,
     sarimax_result: SARIMAX,
     forecast_data: pd.DataFrame,
     output_img_dir: str,
@@ -205,7 +207,8 @@ def generate_forecast(
 
     try:
         predictions = sarimax_result.get_forecast(
-            steps=len(forecast_data), exog=exog_forecast.astype(float)
+            steps=len(forecast_data),
+            exog=exog_forecast.astype(float),
         )
         predicted_accidents = predictions.predicted_mean
 
@@ -220,18 +223,26 @@ def generate_forecast(
 
         export_forecast_results(
             br,
+            year,
             forecast_data,
             predicted_accidents,
             output_img_dir,
             metrics,
         )
         export_to_excel(
+            br,
+            year,
             forecast_data,
             predicted_accidents,
-            year=2023,
-            output_dir=output_img_dir,
+            output_img_dir,
         )
-        plot_comparison_chart(forecast_data, predicted_accidents, 2023, output_img_dir)
+        plot_comparison_chart(
+            br,
+            year,
+            forecast_data,
+            predicted_accidents,
+            output_img_dir,
+        )
 
     except ValueError as e:
         print(f"Failed to forecast for BR-{br} in 2023: {e}")
@@ -250,6 +261,7 @@ def process_br_data(
     :param config_list: List of configurations to train the model with.
     """
     br_list = merged_data["br"].unique()
+    test_years = ["2018", "2019", "2020", "2021", "2022", "2023"]
 
     for br in br_list:
         print("-" * 50)
@@ -261,31 +273,42 @@ def process_br_data(
             print(f"Skipping BR-{br} due to insufficient data.")
             continue
 
-        try:
-            train_data = br_data[br_data["year_month"] < "2023-01"]
-            test_data = br_data[br_data["year_month"].str.startswith("2023")]
+        for year in test_years:
+            try:
+                train_data = br_data[br_data["year_month"] < f"{year}-01"]
+                test_data = br_data[br_data["year_month"].str.startswith(year)]
 
-            if len(test_data) == 0:
-                print(f"No data available to forecast for BR-{br} in 2023. Skipping...")
+                if len(test_data) == 0:
+                    print(
+                        f"No data available to forecast for BR-{br} in {year}. Skipping..."
+                    )
+                    continue
+
+                export_training_testing_data(
+                    br,
+                    train_data,
+                    test_data,
+                    output_img_dir,
+                )
+
+                for config in config_list:
+                    sarimax_result = train_sarimax_model(train_data, config)
+                    print(
+                        f"Model training completed for BR-{br} with config {config} for year {year}."
+                    )
+                    print("-" * 50)
+
+                    generate_forecast(
+                        br,
+                        year,
+                        sarimax_result,
+                        test_data,
+                        output_img_dir,
+                    )
+
+            except ValueError as e:
+                print(f"Failed to train SARIMAX model for BR-{br} in year {year}: {e}")
                 continue
-
-            export_training_testing_data(
-                br,
-                train_data,
-                test_data,
-                output_img_dir,
-            )
-
-            for config in config_list:
-                sarimax_result = train_sarimax_model(train_data, config)
-                print(f"Model training completed for BR-{br} with config {config}.")
-                print("-" * 50)
-
-                generate_forecast(br, sarimax_result, test_data, output_img_dir)
-
-        except ValueError as e:
-            print(f"Failed to train SARIMAX model for BR-{br}: {e}")
-            continue
 
 
 def get_sarimax_configs() -> list[dict[str, tuple]]:
@@ -295,8 +318,8 @@ def get_sarimax_configs() -> list[dict[str, tuple]]:
     :return: List of configurations with 'order' and 'seasonal_order'.
     """
     return [
-        {"order": (1, 1, 1), "seasonal_order": (1, 1, 1, 12)},
-        # {"order": (2, 1, 2), "seasonal_order": (2, 1, 2, 12)},
+        # {"order": (1, 1, 1), "seasonal_order": (1, 1, 1, 12)},
+        {"order": (2, 1, 2), "seasonal_order": (2, 1, 2, 12)},
     ]
 
 

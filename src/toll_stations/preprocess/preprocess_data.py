@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
-# @Author: Jean Mira
-# @Date:   2024-08-09 20:08:10
-# @Last Modified by:   Ramiro Luiz Nunes
-# @Last Modified time: 2024-08-31 00:32:33
-
-
+# ============================================================================
+# @Author: Ramiro Luiz Nunes
+# @Date:   2024-08-30 19:14:45
+# @Info:   A brief description of the file
+# ============================================================================
 import pandas as pd
 import re
 import unidecode
@@ -46,14 +45,16 @@ def preprocess_toll_data(input_file_path: str, output_file_path: str) -> None:
     This function reads the toll station data from a CSV file with 'latin1' encoding,
     normalizes the data by removing accents, filters the data to include only toll
     stations located in Minas Gerais (MG), extracts the BR and KM information,
-    renames the 'mes_ano' column to 'data', and saves the filtered data to a new CSV file.
+    renames the 'mes_ano' column to 'year_month', and saves the filtered data to a new CSV file.
 
     :param input_file_path: Path to the input CSV file.
     :param output_file_path: Path to save the preprocessed CSV file.
     :return: None
     """
     try:
-        df = pd.read_csv(input_file_path, encoding="latin1", delimiter=";")
+        df = pd.read_csv(
+            input_file_path, encoding="latin1", delimiter=";", low_memory=False
+        )
 
         # Normalize column names to lowercase
         df.columns = df.columns.str.lower()
@@ -62,17 +63,32 @@ def preprocess_toll_data(input_file_path: str, output_file_path: str) -> None:
         df.columns = [unidecode.unidecode(col) for col in df.columns]
         df["praca"] = df["praca"].apply(unidecode.unidecode)
 
-        # Rename 'mes_ano' column to 'data'
-        df.rename(columns={"mes_ano": "data"}, inplace=True)
+        # Rename 'mes_ano' column to 'year_month'
+        df.rename(columns={"mes_ano": "year_month"}, inplace=True)
 
-        # Convert 'data' columns to datetime
-        df["data"] = pd.to_datetime(df["data"], format="%d/%m/%Y")
-
-        # Create 'year_month' column for monthly aggregation
-        df["year_month"] = df["data"].dt.to_period("M")
+        # Convert 'year_month' column to period
+        df["year_month"] = pd.to_datetime(
+            df["year_month"], format="%d/%m/%Y"
+        ).dt.to_period("M")
 
         # Filter for Minas Gerais toll stations
         data_mg = df[df["praca"].str.contains("MG")]
+
+        # Further filtering for specific conditions
+        data_mg = data_mg[data_mg["tipo_de_veiculo"] == "Passeio"]
+
+        # Ensure 'volume_total' is numeric and handle non-numeric values
+        data_mg["volume_total"] = pd.to_numeric(
+            data_mg["volume_total"], errors="coerce"
+        )
+
+        # Group by 'year_month' and 'praca' to calculate the mean volume_total for 'Passeio'
+        data_mg = (
+            data_mg.groupby(["year_month", "praca"], as_index=False)
+            .agg({"volume_total": "mean"})
+            .round()
+            .astype(int)
+        )
 
         # Extract BR and KM and add them as new columns
         data_mg[["br", "km"]] = data_mg["praca"].apply(
@@ -81,18 +97,6 @@ def preprocess_toll_data(input_file_path: str, output_file_path: str) -> None:
 
         # Convert 'km' to float
         data_mg["km"] = data_mg["km"].astype(float)
-
-        # Normalize 'volume_total' by calculating the monthly mean and applying it
-        if "volume_total" in data_mg.columns:
-            data_mg["volume_total"] = (
-                data_mg.groupby("year_month")["volume_total"]
-                .transform("mean")
-                .round()
-                .astype(int)
-            )
-
-        # Convert the 'data' column back to string with the desired format
-        data_mg["data"] = data_mg["data"].dt.strftime("%d/%m/%Y")
 
         # Save the preprocessed data with only numeric BR and KM
         data_mg.to_csv(output_file_path, index=False, encoding="utf-8", sep=",")

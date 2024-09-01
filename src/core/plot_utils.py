@@ -14,9 +14,10 @@ from sklearn.metrics import mean_absolute_percentage_error, mean_squared_error
 
 
 def plot_comparison_chart(
+    br: str,
+    year: int,
     forecast_data: pd.DataFrame,
     predicted_accidents: pd.Series,
-    year: int,
     output_img_dir: str,
 ) -> None:
     """
@@ -35,21 +36,25 @@ def plot_comparison_chart(
         label="Predicted",
         linestyle="--",
     )
-    plt.title(f"Actual vs Predicted Accidents for {year}")
-    plt.xlabel("Month")
-    plt.ylabel("Number of Accidents")
+    plt.title(f"Acidentes reais vs. previstos para {year} na BR-{br}")
+    plt.xlabel("Mês")
+    plt.ylabel("Número de Acidente")
     plt.legend()
     plt.grid(True)
 
-    output_path = os.path.join(output_img_dir, f"BR_forecast_comparison_{year}.png")
+    output_path = os.path.join(
+        output_img_dir,
+        f"BR_{br}_forecast_comparison_{year}.png",
+    )
     plt.savefig(output_path)
     plt.close()
 
 
 def export_to_excel(
+    br: str,
+    year: int,
     forecast_data: pd.DataFrame,
     predictions: pd.Series,
-    year: int,
     output_dir: str,
 ) -> None:
     """
@@ -71,7 +76,7 @@ def export_to_excel(
     forecast_data["Erro Absoluto"] = abs(forecast_data["accidents"] - predictions)
 
     # Save to Excel
-    excel_path = os.path.join(output_dir, f"performance_sarima_{year}.xlsx")
+    excel_path = os.path.join(output_dir, f"performance_sarimax_{year}_in_{br}.xlsx")
     forecast_data.to_excel(excel_path, index=False)
 
     # Add summary sheet with metrics

@@ -54,7 +54,7 @@ def load_preprocessed_data(
     # Monthly aggregation of accident data and traffic volume
     accident_data_grouped = (
         accident_data.groupby(["br", "km", "year_month"])
-        .agg({"id": "count"})  # Counting the number of accidents per month
+        .agg({"id": "count"})
         .reset_index()
     )
 
@@ -77,18 +77,18 @@ def load_preprocessed_data(
     output_file_path = os.path.join(output_dir, "preprocessed_data.csv")
     preprocessed_data.to_csv(output_file_path, index=False, encoding="utf-8")
 
-    print("Preprocessed data head:\n", preprocessed_data.head())
-    monthly_data = preprocessed_data.groupby("year_month")["volume_total"].sum()
+    # print("Preprocessed data head:\n", preprocessed_data.head())
+    # monthly_data = preprocessed_data.groupby("year_month")["volume_total"].sum()
 
-    fig, ax = plt.subplots()
-    plot_acf(monthly_data, ax=ax)
-    plt.savefig(os.path.join(output_dir, "autocorrelation_plot.png"))
-    plt.close(fig)
+    # fig, ax = plt.subplots()
+    # plot_acf(monthly_data, ax=ax)
+    # plt.savefig(os.path.join(output_dir, "autocorrelation_plot.png"))
+    # plt.close(fig)
 
-    decomposition = seasonal_decompose(monthly_data, model="additive", period=12)
-    fig = decomposition.plot()
-    plt.savefig(os.path.join(output_dir, "seasonal_decomposition_plot.png"))
-    plt.close(fig)
+    # decomposition = seasonal_decompose(monthly_data, model="additive", period=12)
+    # fig = decomposition.plot()
+    # plt.savefig(os.path.join(output_dir, "seasonal_decomposition_plot.png"))
+    # plt.close(fig)
 
     # Renaming columns for clarity
     preprocessed_data.rename(
@@ -154,14 +154,8 @@ def process_toll_data(toll_data: pd.DataFrame) -> pd.DataFrame:
     """
     toll_data = toll_data.groupby(["br", "km", "year_month"], as_index=False).agg(
         {
-            "volume_total": "sum",
-            "concessionaria": "first",
-            "data": "first",
-            "sentido": "first",
+            "volume_total": "first",
             "praca": "first",
-            "tipo_cobranca": "first",
-            "categoria": "first",
-            "tipo_de_veiculo": "first",
         }
     )
 
