@@ -5,11 +5,11 @@
 # @Info:   Main script to train and forecast using SARIMAX model on traffic data
 # ============================================================================
 
-
 import pandas as pd
 import numpy as np
 import os
 import sys
+import re
 
 
 from data_loader import get_file_paths, load_preprocessed_data
@@ -60,26 +60,23 @@ def load_data(base_dir: str) -> pd.DataFrame:
 
 def aggregate_traffic_volume(data: pd.DataFrame) -> pd.DataFrame:
     """
-    Aggregate accident data by BR and month.
+    Aggregate accident data by BR, praca, and month.
 
     :param data: DataFrame containing preprocessed accident and toll data.
-    :return: Aggregated DataFrame with accident counts.
+    :return: Aggregated DataFrame with accident counts and traffic volume.
     """
-    required_columns = ["traffic_volume", "accidents"]
+    required_columns = ["traffic_volume", "accidents", "praca"]
 
     # Check if the required columns are present in the DataFrame
     for col in required_columns:
         if col not in data.columns:
             raise KeyError(f"Column '{col}' does not exist in the DataFrame.")
 
-    # Group by 'br' and 'year_month', counting the accidents
+    # Group by 'br', 'praca', and 'year_month', counting the accidents
     aggregated_data = (
-        data.groupby(["br", "year_month"]).agg({"accidents": "count"}).reset_index()
-    )
-
-    # Maintain the original traffic_volume from the first entry of each group
-    aggregated_data["traffic_volume"] = (
-        data.groupby(["br", "year_month"])["traffic_volume"].first().values
+        data.groupby(["br", "praca", "year_month"])
+        .agg({"accidents": "count", "traffic_volume": "first"})
+        .reset_index()
     )
 
     return aggregated_data
@@ -105,8 +102,16 @@ def calculate_metrics(
     return metrics
 
 
+def sanitize_filename(name: str) -> str:
+    """
+    Replace spaces, commas, and other unsafe characters in filenames with underscores.
+    """
+    return re.sub(r"[^\w\-_.]", "_", name)
+
+
 def export_training_testing_data(
     br: str,
+    praca: str,
     br_data: pd.DataFrame,
     forecast_data: pd.DataFrame,
     output_dir: str,
@@ -115,11 +120,18 @@ def export_training_testing_data(
     Export the training and testing data to an Excel file.
 
     :param br: The BR identifier.
+    :param praca: The praca identifier.
     :param br_data: DataFrame containing the BR's training data.
     :param forecast_data: DataFrame containing the BR's testing data.
     :param output_dir: Directory where the Excel file will be saved.
     """
-    output_path = os.path.join(output_dir, f"BR_{br}_training_testing_data.xlsx")
+    sanitized_praca = sanitize_filename(praca)
+    output_path = os.path.join(
+        output_dir, f"BR_{br}_PRACA_{sanitized_praca}_training_testing_data.xlsx"
+    )
+
+    os.makedirs(output_dir, exist_ok=True)
+
     with pd.ExcelWriter(output_path) as writer:
         br_data.to_excel(writer, sheet_name="Training Data", index=False)
         forecast_data.to_excel(writer, sheet_name="Testing Data", index=False)
@@ -127,6 +139,7 @@ def export_training_testing_data(
 
 def export_forecast_results(
     br: str,
+    praca: str,
     year: int,
     forecast_data: pd.DataFrame,
     predicted_accidents: pd.Series,
@@ -137,12 +150,21 @@ def export_forecast_results(
     Export the actual and predicted data, along with evaluation metrics, to an Excel file.
 
     :param br: The BR identifier.
+    :param praca: The praca identifier.
+    :param year: The year of the forecast.
     :param forecast_data: DataFrame containing the BR's testing data.
     :param predicted_accidents: Series of predicted accident numbers.
     :param output_dir: Directory where the Excel file will be saved.
     :param metrics: Dictionary containing the evaluation metrics.
     """
-    output_path = os.path.join(output_dir, f"BR_{br}_forecast_results_{year}.xlsx")
+    sanitized_praca = sanitize_filename(praca)
+    output_path = os.path.join(
+        output_dir,
+        f"BR_{br}_PRACA_{sanitized_praca}_forecast_results_{year}.xlsx",
+    )
+
+    os.makedirs(output_dir, exist_ok=True)
+
     results_df = forecast_data.copy()
     results_df["Predicted Accidents"] = predicted_accidents
     results_df["Error"] = results_df["accidents"] - results_df["Predicted Accidents"]
@@ -189,6 +211,7 @@ def train_sarimax_model(
 
 def generate_forecast(
     br: str,
+    praca: str,
     year: int,
     sarimax_result: SARIMAX,
     forecast_data: pd.DataFrame,
@@ -198,6 +221,8 @@ def generate_forecast(
     Generate and save the forecast for the specified BR and year 2023.
 
     :param br: The BR identifier.
+    :param praca: The praca identifier.
+    :param year: The year of the forecast.
     :param sarimax_result: Trained SARIMAX model result.
     :param forecast_data: DataFrame containing the BR's testing data.
     :param output_img_dir: Directory where the output images will be saved.
@@ -219,10 +244,11 @@ def generate_forecast(
         predicted_accidents = predicted_accidents[:min_length]
 
         metrics = calculate_metrics(real_accidents, predicted_accidents)
-        print(f"Evaluation Metrics for BR-{br}: {metrics}")
+        print(f"Evaluation Metrics for BR-{br}, PRACA-{praca}: {metrics}")
 
         export_forecast_results(
             br,
+            praca,
             year,
             forecast_data,
             predicted_accidents,
@@ -230,14 +256,14 @@ def generate_forecast(
             metrics,
         )
         export_to_excel(
-            br,
+            sanitize_filename(praca),
             year,
             forecast_data,
             predicted_accidents,
             output_img_dir,
         )
         plot_comparison_chart(
-            br,
+            sanitize_filename(praca),
             year,
             forecast_data,
             predicted_accidents,
@@ -245,70 +271,83 @@ def generate_forecast(
         )
 
     except ValueError as e:
-        print(f"Failed to forecast for BR-{br} in 2023: {e}")
+        print(f"Failed to forecast for BR-{br}, PRACA-{praca} in {year}: {e}")
 
 
-def process_br_data(
+def process_praca_data(
     merged_data: pd.DataFrame,
     output_dir: str,
     config_list: list[dict[str, tuple]],
 ) -> None:
     """
-    Process each BR's data, train the SARIMAX model, and generate forecasts.
+    Process each praca's data within each BR, train the SARIMAX model, and generate forecasts.
 
     :param merged_data: DataFrame containing the merged traffic and accident data.
     :param output_dir: Directory where the output will be saved.
     :param config_list: List of configurations to train the model with.
     """
     br_list = merged_data["br"].unique()
-    test_years = ["2018", "2019", "2020", "2021", "2022", "2023"]
+    test_years = ["2022", "2023"]
 
     for br in br_list:
         print("-" * 50)
         print(f"Processing BR-{br}...")
         br_data = merged_data[merged_data["br"] == br]
-        print(f"Number of records for BR-{br}: {len(br_data)}")
+        praca_list = br_data["praca"].unique()
 
-        if len(br_data) < 3:
-            print(f"Skipping BR-{br} due to insufficient data.")
-            continue
+        for praca in praca_list:
+            print(f"Processing PRACA-{praca} within BR-{br}...")
+            praca_data = br_data[br_data["praca"] == praca]
+            print(f"Number of records for PRACA-{praca} in BR-{br}: {len(praca_data)}")
 
-        for year in test_years:
-            try:
-                train_data = br_data[br_data["year_month"] < f"{year}-01"]
-                test_data = br_data[br_data["year_month"].str.startswith(year)]
-
-                if len(test_data) == 0:
-                    print(
-                        f"No data available to forecast for BR-{br} in {year}. Skipping..."
-                    )
-                    continue
-
-                export_training_testing_data(
-                    br,
-                    train_data,
-                    test_data,
-                    output_dir + f"/{year}",
+            if len(praca_data) < 3:
+                print(
+                    f"Skipping PRACA-{praca} within BR-{br} due to insufficient data."
                 )
+                continue
 
-                for config in config_list:
-                    sarimax_result = train_sarimax_model(train_data, config)
-                    print(
-                        f"Model training completed for BR-{br} with config {config} for year {year}."
-                    )
-                    print("-" * 50)
+            for year in test_years:
+                try:
+                    train_data = praca_data[praca_data["year_month"] < f"{year}-01"]
+                    test_data = praca_data[
+                        praca_data["year_month"].str.startswith(year)
+                    ]
 
-                    generate_forecast(
+                    if len(test_data) == 0:
+                        print(
+                            f"No data available to forecast for PRACA-{praca} in BR-{br} in {year}. Skipping..."
+                        )
+                        continue
+
+                    export_training_testing_data(
                         br,
-                        year,
-                        sarimax_result,
+                        praca,
+                        train_data,
                         test_data,
                         output_dir + f"/{year}",
                     )
 
-            except ValueError as e:
-                print(f"Failed to train SARIMAX model for BR-{br} in year {year}: {e}")
-                continue
+                    for config in config_list:
+                        sarimax_result = train_sarimax_model(train_data, config)
+                        print(
+                            f"Model training completed for PRACA-{praca} within BR-{br} with config {config} for year {year}."
+                        )
+                        print("-" * 50)
+
+                        generate_forecast(
+                            br,
+                            praca,
+                            year,
+                            sarimax_result,
+                            test_data,
+                            output_dir + f"/{year}",
+                        )
+
+                except ValueError as e:
+                    print(
+                        f"Failed to train SARIMAX model for PRACA-{praca} within BR-{br} in year {year}: {e}"
+                    )
+                    continue
 
 
 def get_sarimax_configs() -> list[dict[str, tuple]]:
@@ -318,8 +357,8 @@ def get_sarimax_configs() -> list[dict[str, tuple]]:
     :return: List of configurations with 'order' and 'seasonal_order'.
     """
     return [
-        {"order": (1, 1, 1), "seasonal_order": (1, 1, 1, 12)},
-        # {"order": (2, 1, 2), "seasonal_order": (2, 1, 2, 12)},
+        # {"order": (1, 1, 1), "seasonal_order": (1, 1, 1, 12)},
+        {"order": (2, 1, 2), "seasonal_order": (2, 1, 2, 12)},
     ]
 
 
@@ -333,16 +372,16 @@ def main() -> None:
     base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
     preprocessed_data = load_data(base_dir)
 
-    # Aggregate traffic volume and accidents by BR and month
+    # Aggregate traffic volume and accidents by BR, praca, and month
     aggregated_data = aggregate_traffic_volume(preprocessed_data)
 
-    output_dir = os.path.join(base_dir, "traffic-accident-analysis/out/core/br")
+    output_dir = os.path.join(base_dir, "traffic-accident-analysis/out/core/praca")
 
     print("-" * 50)
     print("Training SARIMAX model on all data...")
     sarimax_configs = get_sarimax_configs()
 
-    process_br_data(
+    process_praca_data(
         aggregated_data,
         output_dir,
         sarimax_configs,
