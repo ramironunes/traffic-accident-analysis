@@ -6,8 +6,12 @@
 # ============================================================================
 
 
+import matplotlib.pyplot as plt
 import os
 import pandas as pd
+
+from statsmodels.graphics.tsaplots import plot_acf
+from statsmodels.tsa.seasonal import seasonal_decompose
 
 
 def get_file_paths(base_dir: str, datasets: list[str]) -> list[str]:
@@ -50,27 +54,49 @@ def load_preprocessed_data(
     # Monthly aggregation of accident data and traffic volume
     accident_data_grouped = (
         accident_data.groupby(["br", "km", "year_month"])
-        .agg({"id": "count"})  # Counting the number of accidents per month
+        .agg({"id": "count"})
         .reset_index()
     )
 
-    merged_data = merge_datasets_on_km_range(
+    preprocessed_data = merge_datasets_on_km_range(
         accident_data_grouped,
         process_toll_data(toll_data),
     )
 
     # Save the processed data to a CSV file
-    base_dir = os.path.abspath(os.path.dirname(__file__))
-    output_file_path = os.path.join(base_dir, "merged_data.csv")
-    merged_data.to_csv(output_file_path, index=False, encoding="utf-8")
+    base_dir = os.path.abspath(
+        os.path.join(
+            os.path.dirname(__file__),
+            "../../..",
+        )
+    )
+    output_dir = os.path.join(
+        base_dir,
+        "traffic-accident-analysis/out/data",
+    )
+    output_file_path = os.path.join(output_dir, "preprocessed_data.csv")
+    preprocessed_data.to_csv(output_file_path, index=False, encoding="utf-8")
+
+    # print("Preprocessed data head:\n", preprocessed_data.head())
+    # monthly_data = preprocessed_data.groupby("year_month")["volume_total"].sum()
+
+    # fig, ax = plt.subplots()
+    # plot_acf(monthly_data, ax=ax)
+    # plt.savefig(os.path.join(output_dir, "autocorrelation_plot.png"))
+    # plt.close(fig)
+
+    # decomposition = seasonal_decompose(monthly_data, model="additive", period=12)
+    # fig = decomposition.plot()
+    # plt.savefig(os.path.join(output_dir, "seasonal_decomposition_plot.png"))
+    # plt.close(fig)
 
     # Renaming columns for clarity
-    merged_data.rename(
+    preprocessed_data.rename(
         columns={"id": "accidents", "volume_total": "traffic_volume"},
         inplace=True,
     )
 
-    return merged_data
+    return preprocessed_data
 
 
 def merge_datasets_on_km_range(
@@ -126,6 +152,13 @@ def process_toll_data(toll_data: pd.DataFrame) -> pd.DataFrame:
     :param toll_data: DataFrame containing the toll station data.
     :return: Processed DataFrame with adjusted distance columns.
     """
+    toll_data = toll_data.groupby(["br", "km", "year_month"], as_index=False).agg(
+        {
+            "volume_total": "first",
+            "praca": "first",
+        }
+    )
+
     # Sort toll stations by 'br' and 'km'
     toll_data = toll_data.sort_values(by=["br", "km"]).reset_index(drop=True)
 
